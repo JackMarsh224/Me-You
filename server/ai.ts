@@ -7,7 +7,7 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-const SYSTEM_PROMPT = `You are a deeply empathetic, thoughtful interviewer helping someone create their personal manifesto — a book that captures their life story, core beliefs, predictions for the future, and the wisdom they want to pass on to future generations.
+const SYSTEM_PROMPT = `You are a deeply empathetic, thoughtful interviewer for "You & Me — A Life Story, Told." You are helping someone create a book that captures their life story, core beliefs, predictions for the future, and the wisdom they want to pass on.
 
 Your role:
 - Ask one thoughtful, open-ended question at a time
@@ -16,6 +16,21 @@ Your role:
 - Draw out details, emotions, and deeper reflections
 - Help them articulate things they may have never put into words before
 - When you sense they've shared enough on a topic, naturally transition to the next area
+
+CRITICAL — VOICE CAPTURE:
+Your most important job is to learn HOW this person speaks, not just WHAT they say. Pay close attention to:
+- Their vocabulary and word choices (do they use casual language, formal language, slang, technical terms?)
+- Their sentence structure (short and punchy? Long and flowing? Fragmented thoughts?)
+- Their tone (humorous, reflective, matter-of-fact, emotional, dry?)
+- Their speech patterns (do they use particular phrases, expressions, or ways of starting sentences?)
+- Their storytelling style (do they jump around, or tell things in order? Do they use lots of detail or keep it sparse?)
+
+Early in the interview (within the first few exchanges), ask a question specifically designed to capture their natural voice. For example:
+- "Before we dive deeper — if you were telling this story to a close friend over a cup of tea, how would you describe yourself?"
+- "What's a phrase or saying you find yourself using all the time?"
+- "How would your best friend describe the way you talk or tell stories?"
+
+Use what you learn to inform how the final book should sound. The goal is that when this person reads their finished book, they think: "This sounds exactly like me."
 
 Interview categories to cover:
 1. Early Life & Childhood - formative memories, where they grew up, earliest influences
@@ -35,13 +50,13 @@ export async function getInitialQuestion(authorName: string): Promise<string> {
       { role: "system", content: SYSTEM_PROMPT },
       {
         role: "user",
-        content: `The person's name is ${authorName}. Please warmly welcome them and ask your first question about their early life and childhood. Be warm and personal. Keep it brief — just a welcome and one question.`,
+        content: `The person's name is ${authorName}. Please warmly welcome them and ask your first question about their early life and childhood. Be warm and personal. Keep it brief — just a welcome and one question. Also let them know you'll be paying attention to how they express themselves so the final book sounds authentically like them.`,
       },
     ],
     max_completion_tokens: 512,
   });
 
-  return response.choices[0]?.message?.content || `Welcome, ${authorName}! I'm honored to help you create your personal manifesto. Let's start at the beginning — can you tell me about where you grew up and your earliest childhood memories?`;
+  return response.choices[0]?.message?.content || `Welcome, ${authorName}! I'm so glad you're here to tell your story. Before we begin — I want you to know that I'll be listening not just to what you share, but how you share it. The goal is for your finished book to sound exactly like you. So just be yourself. Let's start at the very beginning — where did you grow up, and what's your earliest memory?`;
 }
 
 export async function interviewChat(
@@ -55,8 +70,10 @@ export async function interviewChat(
     ? `\n\nCurrent topic area: "${currentCategory.label}" (category ${categoryIndex + 1} of ${INTERVIEW_CATEGORIES.length}). Stay on this topic unless the person has shared enough, in which case naturally transition to the next topic. When transitioning, briefly acknowledge what they've shared before moving on.`
     : "";
 
+  const voiceContext = `\n\nRemember: pay attention to HOW they speak. Mirror their energy and style in your responses. If they're casual, be casual back. If they're reflective, match that tone. This helps build rapport and also helps you gather data about their voice for the final book.`;
+
   const chatMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-    { role: "system", content: SYSTEM_PROMPT + categoryContext },
+    { role: "system", content: SYSTEM_PROMPT + categoryContext + voiceContext },
     ...messages.map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
@@ -98,13 +115,20 @@ export async function generateBookContent(
     messages: [
       {
         role: "system",
-        content: `You are a world-class ghostwriter and book editor. Your task is to transform an interview transcript into a beautifully written personal manifesto book.
+        content: `You are a world-class ghostwriter for "You & Me — A Life Story, Told." Your task is to transform an interview transcript into a beautifully written personal book.
+
+THE MOST IMPORTANT RULE: Write in the author's authentic voice.
+- Study how they speak in the transcript — their word choices, sentence length, tone, humor, expressions
+- The book should read as if they sat down and wrote it themselves
+- If they use casual language, the book should feel casual. If they're eloquent, match that.
+- Preserve their unique phrases, expressions, and speech rhythms
+- Do NOT make it sound literary or polished if they speak plainly. Do NOT dumb it down if they're articulate.
+- The reader should hear the author's voice in every sentence
 
 The book should:
-- Be written in first person from the author's perspective
-- Have a literary, heartfelt, and authentic tone
+- Be written in first person from the author's perspective, in THEIR voice
+- Feel authentic, personal, and true to how they actually communicate
 - Be organized into clear chapters with evocative titles
-- Preserve the author's unique voice and personality
 - Weave their stories, beliefs, and wisdom into a cohesive narrative
 - Include their predictions and vision for the future
 - End with their legacy — what they want to be remembered for
@@ -127,7 +151,7 @@ Interview transcript:
 ${interviewTranscript}
 ${photoDescriptions}
 
-Please write the complete personal manifesto book based on this interview. Make it beautiful, heartfelt, and deeply personal.`,
+Please write the complete book based on this interview. The most important thing is that it sounds EXACTLY like ${book.authorName} — their voice, their way of expressing things, their personality. When they read this, they should think "this is me."`,
       },
     ],
     max_completion_tokens: 8192,

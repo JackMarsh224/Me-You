@@ -1,7 +1,7 @@
-# Manifesto - Personal Book Creation App
+# You & Me — A Life Story, Told
 
 ## Overview
-A personal manifesto book creation platform where users go through an AI-guided interview to capture their life story, beliefs, and predictions. The AI asks thoughtful questions across 7 life categories, then generates a beautifully formatted book that can be downloaded as a print-ready file.
+A personal book creation platform where users go through an AI-guided interview to capture their life story, beliefs, and predictions. The AI asks thoughtful questions across 7 life categories, captures the interviewee's unique speech patterns and voice, then generates a beautifully formatted book written in the person's authentic voice that can be downloaded as a print-ready file.
 
 ## Architecture
 - **Frontend**: React + Vite + Tailwind CSS + shadcn/ui components
@@ -11,16 +11,17 @@ A personal manifesto book creation platform where users go through an AI-guided 
 - **File uploads**: Multer for photo management
 
 ## Key Features
-1. **Landing Page** - Hero section with warm literary design
+1. **Landing Page** - Clean black and white design with "You & Me" logo
 2. **AI Interview** - 7-category guided conversation (Early Life, Family, Career, Beliefs, Wisdom, Predictions, Legacy)
-3. **Photo Uploads** - Attach photos that get embedded in the book
-4. **Book Generation** - AI compiles interview into formatted manifesto
-5. **Book Preview** - Beautiful chapter-by-chapter reading view
-6. **Print-Ready Download** - HTML file with embedded photos for manufacturing
+3. **Voice Capture** - AI learns how the person speaks and writes the book in their authentic voice
+4. **Photo Uploads** - Attach photos that get embedded in the book
+5. **Book Generation** - AI compiles interview into a book written in the interviewee's voice
+6. **Book Preview** - Beautiful chapter-by-chapter reading view
+7. **Print-Ready Download** - HTML file with base64-embedded photos for manufacturing
 
 ## Project Structure
 - `shared/schema.ts` - Database schema (books, interview_messages, photos)
-- `server/ai.ts` - AI interview and book generation logic
+- `server/ai.ts` - AI interview and book generation logic (with voice capture prompts)
 - `server/routes.ts` - All API endpoints
 - `server/storage.ts` - Database CRUD operations
 - `server/db.ts` - Database connection
@@ -39,7 +40,8 @@ A personal manifesto book creation platform where users go through an AI-guided 
 - GET /api/books/:id/download - Download print-ready HTML
 
 ## Design
-- Warm literary color palette (amber/brown tones)
+- Black and white / monochrome color palette
 - Libre Baskerville serif for headings, Plus Jakarta Sans for body
+- Custom "You & Me" logo from attached assets
 - Dark mode support
 - Responsive design

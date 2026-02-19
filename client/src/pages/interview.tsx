@@ -11,7 +11,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Send,
-  Feather,
   Camera,
   BookOpen,
   ArrowLeft,
@@ -24,9 +23,11 @@ import {
   Loader2,
   X,
   Image as ImageIcon,
+  Feather,
 } from "lucide-react";
 import type { Book, InterviewMessage, Photo, InterviewCategory } from "@shared/schema";
 import { INTERVIEW_CATEGORIES } from "@shared/schema";
+import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
 
 const categoryIcons: Record<string, any> = {
   early_life: Baby,
@@ -173,7 +174,7 @@ export default function Interview() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Feather className="w-8 h-8 text-primary mx-auto animate-pulse" />
+          <Loader2 className="w-8 h-8 mx-auto animate-spin text-muted-foreground" />
           <p className="text-muted-foreground">Loading your interview...</p>
         </div>
       </div>
@@ -210,7 +211,7 @@ export default function Interview() {
               </Button>
               <div>
                 <h1 className="font-serif font-bold text-lg" data-testid="text-book-title">
-                  {book.authorName}'s Manifesto
+                  {book.authorName}'s Story
                 </h1>
                 {currentCategory && (
                   <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -311,8 +312,7 @@ export default function Interview() {
                 >
                   {msg.role === "assistant" && (
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Feather className="w-3 h-3 text-primary" />
-                      <span className="text-xs font-medium text-primary">Manifesto AI</span>
+                      <img src={logoImage} alt="" className="h-3.5 object-contain" />
                     </div>
                   )}
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
@@ -325,8 +325,7 @@ export default function Interview() {
             <div className="flex justify-start">
               <div className="max-w-[85%] sm:max-w-[75%] rounded-md px-4 py-3 bg-card border">
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <Feather className="w-3 h-3 text-primary" />
-                  <span className="text-xs font-medium text-primary">Manifesto AI</span>
+                  <img src={logoImage} alt="" className="h-3.5 object-contain" />
                 </div>
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{streamedContent}</p>
               </div>
@@ -337,7 +336,7 @@ export default function Interview() {
             <div className="flex justify-start">
               <div className="max-w-[85%] sm:max-w-[75%] rounded-md px-4 py-3 bg-card border">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Thinking...</span>
                 </div>
               </div>

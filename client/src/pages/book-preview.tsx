@@ -7,12 +7,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import {
   ArrowLeft,
   Download,
-  Feather,
   MessageCircle,
   Loader2,
 } from "lucide-react";
 import type { Book, Photo } from "@shared/schema";
 import { useState } from "react";
+import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
 
 export default function BookPreview() {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +36,7 @@ export default function BookPreview() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${book?.authorName || "manifesto"}-book.html`;
+      a.download = `${book?.authorName || "you-and-me"}-book.html`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -52,7 +52,7 @@ export default function BookPreview() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Feather className="w-8 h-8 text-primary mx-auto animate-pulse" />
+          <Loader2 className="w-8 h-8 mx-auto animate-spin text-muted-foreground" />
           <p className="text-muted-foreground">Loading your book...</p>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function BookPreview() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="p-8 text-center max-w-md">
-          <Feather className="w-8 h-8 text-primary mx-auto mb-4" />
+          <img src={logoImage} alt="You & Me" className="h-10 mx-auto object-contain mb-4" />
           <h2 className="font-serif text-xl font-bold mb-2">Book Not Ready Yet</h2>
           <p className="text-muted-foreground mb-6">
             Complete your interview and generate the book first.
@@ -121,7 +121,7 @@ export default function BookPreview() {
               ) : (
                 <Download className="w-4 h-4 mr-2" />
               )}
-              {downloading ? "Preparing..." : "Download PDF"}
+              {downloading ? "Preparing..." : "Download"}
             </Button>
             <ThemeToggle />
           </div>
@@ -131,19 +131,18 @@ export default function BookPreview() {
       <div className="max-w-3xl mx-auto px-4 py-12">
         <div className="text-center mb-16">
           <div
-            className="w-full max-w-sm mx-auto aspect-[3/4] rounded-md flex flex-col items-center justify-center p-8 mb-8"
-            style={{ backgroundColor: book.coverColor || "#1a1a2e" }}
+            className="w-full max-w-sm mx-auto aspect-[3/4] rounded-md flex flex-col items-center justify-center p-8 mb-8 bg-foreground"
             data-testid="book-cover"
           >
-            <Feather className="w-10 h-10 text-white/60 mb-6" />
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white text-center leading-tight">
+            <img src={logoImage} alt="You & Me" className="h-16 object-contain mb-6 invert" />
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-background text-center leading-tight">
               {book.title}
             </h2>
             {book.subtitle && (
-              <p className="text-white/70 mt-3 text-sm text-center">{book.subtitle}</p>
+              <p className="text-background/70 mt-3 text-sm text-center">{book.subtitle}</p>
             )}
             <div className="mt-auto">
-              <p className="text-white/80 font-serif text-lg">{book.authorName}</p>
+              <p className="text-background/80 font-serif text-lg">{book.authorName}</p>
             </div>
           </div>
         </div>
@@ -165,7 +164,7 @@ export default function BookPreview() {
             return (
               <section key={i} data-testid={`chapter-${i}`}>
                 <div className="mb-8">
-                  <p className="text-sm text-primary font-mono font-bold mb-1">
+                  <p className="text-sm text-muted-foreground font-mono font-bold mb-1">
                     Chapter {String(i + 1).padStart(2, "0")}
                   </p>
                   <h3 className="font-serif text-2xl sm:text-3xl font-bold">
@@ -207,12 +206,12 @@ export default function BookPreview() {
         </div>
 
         <div className="mt-20 text-center py-12 border-t">
-          <Feather className="w-6 h-6 text-primary mx-auto mb-4" />
+          <img src={logoImage} alt="You & Me" className="h-8 mx-auto object-contain mb-4" />
           <p className="font-serif text-lg italic text-muted-foreground">
             The End
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            A personal manifesto by {book.authorName}
+            A life story by {book.authorName}
           </p>
         </div>
       </div>

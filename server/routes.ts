@@ -42,7 +42,7 @@ export async function registerRoutes(
       }
       const book = await storage.createBook({
         authorName: authorName.trim(),
-        title: `${authorName.trim()}'s Personal Manifesto`,
+        title: `${authorName.trim()}'s Story`,
         status: "interviewing",
         currentCategory: "early_life",
       });
@@ -196,7 +196,7 @@ export async function registerRoutes(
       const html = generatePrintHTML(book, photosWithData);
 
       res.setHeader("Content-Type", "text/html");
-      res.setHeader("Content-Disposition", `attachment; filename="${book.authorName}-manifesto.html"`);
+      res.setHeader("Content-Disposition", `attachment; filename="${book.authorName}-you-and-me.html"`);
       res.send(html);
     } catch (error) {
       res.status(500).json({ error: "Failed to download book" });
@@ -300,9 +300,9 @@ function generatePrintHTML(book: any, photos: any[]): string {
     .cover .author { font-size: 16pt; color: #555; margin-top: 20pt; }
     .cover .subtitle { font-size: 12pt; color: #777; margin-top: 8pt; font-style: italic; }
     .dedication { text-align: center; font-style: italic; padding: 3in 0; page-break-after: always; }
-    .chapter-num { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10pt; color: #8b6914; font-weight: 600; margin-bottom: 4pt; letter-spacing: 1px; }
+    .chapter-num { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10pt; color: #555; font-weight: 600; margin-bottom: 4pt; letter-spacing: 1px; }
     p { margin: 0 0 12pt 0; text-align: justify; }
-    .photo { margin: 20pt 0; padding: 12pt; background: #f9f7f4; border-radius: 4pt; text-align: center; }
+    .photo { margin: 20pt 0; padding: 12pt; background: #f5f5f5; border-radius: 4pt; text-align: center; }
     .photo-caption { font-style: italic; font-size: 9pt; color: #666; margin: 8pt 0 0 0; }
     .end { text-align: center; margin-top: 40pt; font-style: italic; color: #777; }
     @media print { body { max-width: none; padding: 0; } }
@@ -318,7 +318,8 @@ function generatePrintHTML(book: any, photos: any[]): string {
   ${chaptersHtml}
   <div class="end">
     <p>~ The End ~</p>
-    <p>A personal manifesto by ${book.authorName}</p>
+    <p>You & Me — A Life Story, Told</p>
+    <p>${book.authorName}</p>
   </div>
 </body>
 </html>`;

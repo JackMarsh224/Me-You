@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { BookOpen, Feather, MessageCircle, Camera, Download, ArrowRight, Sparkles } from "lucide-react";
+import { MessageCircle, Camera, Download, ArrowRight, BookOpen } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
 
 export default function Landing() {
   const [, navigate] = useLocation();
@@ -27,7 +28,7 @@ export default function Landing() {
     {
       icon: MessageCircle,
       title: "AI-Guided Interview",
-      description: "Our AI asks thoughtful questions about your life, beliefs, and vision for the future.",
+      description: "Thoughtful questions about your life, beliefs, and vision — in your own voice.",
     },
     {
       icon: Camera,
@@ -37,12 +38,12 @@ export default function Landing() {
     {
       icon: BookOpen,
       title: "Beautiful Book Design",
-      description: "Your words are crafted into a professionally designed, print-ready manifesto.",
+      description: "Your words are crafted into a professionally designed, print-ready book.",
     },
     {
       icon: Download,
       title: "Print-Ready Download",
-      description: "Download your finished book as a PDF, ready to send to any print manufacturer.",
+      description: "Download your finished book, ready to send to any print manufacturer.",
     },
   ];
 
@@ -50,17 +51,13 @@ export default function Landing() {
     <div className="min-h-screen bg-background">
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <Feather className="w-5 h-5 text-primary" />
-            <span className="font-serif text-lg font-bold" data-testid="text-logo">Manifesto</span>
-          </div>
+          <img src={logoImage} alt="You & Me" className="h-8 object-contain" data-testid="img-logo" />
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button
               onClick={() => setShowStart(true)}
               data-testid="button-start-header"
             >
-              <Sparkles className="w-4 h-4 mr-2" />
               Start Your Book
             </Button>
           </div>
@@ -68,20 +65,21 @@ export default function Landing() {
       </header>
 
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
         <div className="max-w-4xl mx-auto text-center relative">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-            <Feather className="w-3.5 h-3.5" />
-            Your legacy, beautifully preserved
-          </div>
+          <img
+            src={logoImage}
+            alt="You & Me — A Life Story, Told"
+            className="mx-auto mb-8 h-24 sm:h-32 object-contain"
+            data-testid="img-hero-logo"
+          />
           <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6" data-testid="text-hero-title">
             Your Life. Your Words.
             <br />
-            <span className="text-primary">Forever.</span>
+            Your Voice.
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            Create a beautifully crafted personal manifesto through an intimate AI-guided conversation.
-            Capture your story, beliefs, and predictions for the generations that follow.
+            An AI-guided conversation that captures your story exactly the way you tell it.
+            Your personality, your expressions, your truth — preserved forever in a beautiful book.
           </p>
           <Button
             size="lg"
@@ -89,7 +87,7 @@ export default function Landing() {
             onClick={() => setShowStart(true)}
             data-testid="button-start-hero"
           >
-            Begin Your Manifesto
+            Begin Your Story
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
@@ -119,9 +117,9 @@ export default function Landing() {
 
       <section className="py-20 px-4 bg-card">
         <div className="max-w-3xl mx-auto text-center">
-          <BookOpen className="w-10 h-10 text-primary mx-auto mb-6" />
+          <BookOpen className="w-10 h-10 text-foreground mx-auto mb-6" />
           <h2 className="font-serif text-3xl font-bold mb-4">
-            What's Inside Your Manifesto
+            What's Inside Your Book
           </h2>
           <p className="text-muted-foreground mb-10 max-w-xl mx-auto">
             Seven chapters covering every dimension of your life
@@ -141,7 +139,7 @@ export default function Landing() {
                 className="flex items-start gap-3 p-4 rounded-md bg-background"
                 data-testid={`text-chapter-${i}`}
               >
-                <span className="text-sm font-mono text-primary font-bold shrink-0">
+                <span className="text-sm font-mono text-muted-foreground font-bold shrink-0">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <div>
@@ -188,11 +186,8 @@ export default function Landing() {
       </section>
 
       <footer className="border-t py-8 px-4 text-center text-sm text-muted-foreground">
-        <div className="flex items-center justify-center gap-2">
-          <Feather className="w-4 h-4 text-primary" />
-          <span className="font-serif font-bold">Manifesto</span>
-        </div>
-        <p className="mt-2">Your life deserves to be remembered.</p>
+        <img src={logoImage} alt="You & Me" className="h-6 mx-auto object-contain mb-2" />
+        <p>Your life deserves to be remembered.</p>
       </footer>
 
       {showStart && (
@@ -205,7 +200,7 @@ export default function Landing() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-6">
-              <Feather className="w-8 h-8 text-primary mx-auto mb-3" />
+              <img src={logoImage} alt="You & Me" className="h-12 mx-auto object-contain mb-3" />
               <h3 className="font-serif text-2xl font-bold">Begin Your Book</h3>
               <p className="text-sm text-muted-foreground mt-2">
                 Enter your name to start the interview process
