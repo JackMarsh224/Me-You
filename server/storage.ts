@@ -1,38 +1,64 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { db } from "./db";
+import {
+  books, interviewMessages, photos,
+  type Book, type InsertBook,
+  type InterviewMessage, type InsertInterviewMessage,
+  type Photo, type InsertPhoto,
+} from "@shared/schema";
+import { eq, desc, asc } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createBook(data: InsertBook): Promise<Book>;
+  getBook(id: number): Promise<Book | undefined>;
+  updateBook(id: number, data: Partial<InsertBook>): Promise<Book>;
+  getMessages(bookId: number): Promise<InterviewMessage[]>;
+  createMessage(data: InsertInterviewMessage): Promise<InterviewMessage>;
+  getPhotos(bookId: number): Promise<Photo[]>;
+  createPhoto(data: InsertPhoto): Promise<Photo>;
+  deletePhoto(id: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async createBook(data: InsertBook): Promise<Book> {
+    const [book] = await db.insert(books).values(data).returning();
+    return book;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getBook(id: number): Promise<Book | undefined> {
+    const [book] = await db.select().from(books).where(eq(books.id, id));
+    return book;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async updateBook(id: number, data: Partial<InsertBook>): Promise<Book> {
+    const [book] = await db.update(books).set(data).where(eq(books.id, id)).returning();
+    return book;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getMessages(bookId: number): Promise<InterviewMessage[]> {
+    return db.select().from(interviewMessages)
+      .where(eq(interviewMessages.bookId, bookId))
+      .orderBy(asc(interviewMessages.createdAt));
+  }
+
+  async createMessage(data: InsertInterviewMessage): Promise<InterviewMessage> {
+    const [msg] = await db.insert(interviewMessages).values(data).returning();
+    return msg;
+  }
+
+  async getPhotos(bookId: number): Promise<Photo[]> {
+    return db.select().from(photos)
+      .where(eq(photos.bookId, bookId))
+      .orderBy(asc(photos.createdAt));
+  }
+
+  async createPhoto(data: InsertPhoto): Promise<Photo> {
+    const [photo] = await db.insert(photos).values(data).returning();
+    return photo;
+  }
+
+  async deletePhoto(id: number): Promise<void> {
+    await db.delete(photos).where(eq(photos.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

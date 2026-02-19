@@ -1,0 +1,242 @@
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { BookOpen, Feather, MessageCircle, Camera, Download, ArrowRight, Sparkles } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
+export default function Landing() {
+  const [, navigate] = useLocation();
+  const [authorName, setAuthorName] = useState("");
+  const [showStart, setShowStart] = useState(false);
+
+  const createBook = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", "/api/books", { authorName: name });
+      return res.json();
+    },
+    onSuccess: (book) => {
+      navigate(`/interview/${book.id}`);
+    },
+  });
+
+  const features = [
+    {
+      icon: MessageCircle,
+      title: "AI-Guided Interview",
+      description: "Our AI asks thoughtful questions about your life, beliefs, and vision for the future.",
+    },
+    {
+      icon: Camera,
+      title: "Photo Integration",
+      description: "Upload your most meaningful photos and they'll be woven into your book.",
+    },
+    {
+      icon: BookOpen,
+      title: "Beautiful Book Design",
+      description: "Your words are crafted into a professionally designed, print-ready manifesto.",
+    },
+    {
+      icon: Download,
+      title: "Print-Ready Download",
+      description: "Download your finished book as a PDF, ready to send to any print manufacturer.",
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Feather className="w-5 h-5 text-primary" />
+            <span className="font-serif text-lg font-bold" data-testid="text-logo">Manifesto</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button
+              onClick={() => setShowStart(true)}
+              data-testid="button-start-header"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Start Your Book
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
+        <div className="max-w-4xl mx-auto text-center relative">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+            <Feather className="w-3.5 h-3.5" />
+            Your legacy, beautifully preserved
+          </div>
+          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6" data-testid="text-hero-title">
+            Your Life. Your Words.
+            <br />
+            <span className="text-primary">Forever.</span>
+          </h1>
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+            Create a beautifully crafted personal manifesto through an intimate AI-guided conversation.
+            Capture your story, beliefs, and predictions for the generations that follow.
+          </p>
+          <Button
+            size="lg"
+            className="text-base px-8"
+            onClick={() => setShowStart(true)}
+            data-testid="button-start-hero"
+          >
+            Begin Your Manifesto
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </section>
+
+      <section className="py-20 px-4">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="font-serif text-3xl font-bold text-center mb-4" data-testid="text-how-it-works">
+            How It Works
+          </h2>
+          <p className="text-muted-foreground text-center max-w-xl mx-auto mb-12">
+            From conversation to printed book in four simple steps
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, i) => (
+              <Card key={i} className="p-6 text-center hover-elevate" data-testid={`card-feature-${i}`}>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
+                  <feature.icon className="w-5 h-5" />
+                </div>
+                <h3 className="font-serif font-bold text-lg mb-2">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 px-4 bg-card">
+        <div className="max-w-3xl mx-auto text-center">
+          <BookOpen className="w-10 h-10 text-primary mx-auto mb-6" />
+          <h2 className="font-serif text-3xl font-bold mb-4">
+            What's Inside Your Manifesto
+          </h2>
+          <p className="text-muted-foreground mb-10 max-w-xl mx-auto">
+            Seven chapters covering every dimension of your life
+          </p>
+          <div className="grid sm:grid-cols-2 gap-4 text-left">
+            {[
+              { title: "Early Life & Childhood", desc: "Where your story began" },
+              { title: "Family & Relationships", desc: "The bonds that shaped you" },
+              { title: "Career & Achievements", desc: "Your professional journey" },
+              { title: "Core Beliefs & Values", desc: "What you stand for" },
+              { title: "Life Lessons & Wisdom", desc: "Hard-won insights" },
+              { title: "Predictions & Future", desc: "Your vision for tomorrow" },
+              { title: "Legacy & Final Words", desc: "What you want remembered" },
+            ].map((chapter, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3 p-4 rounded-md bg-background"
+                data-testid={`text-chapter-${i}`}
+              >
+                <span className="text-sm font-mono text-primary font-bold shrink-0">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <p className="font-serif font-bold">{chapter.title}</p>
+                  <p className="text-sm text-muted-foreground">{chapter.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 px-4">
+        <div className="max-w-lg mx-auto text-center">
+          <h2 className="font-serif text-3xl font-bold mb-4">
+            Ready to Begin?
+          </h2>
+          <p className="text-muted-foreground mb-8">
+            Enter your name and start your journey. The AI will guide you through the entire process.
+          </p>
+          <div className="flex gap-3">
+            <Input
+              placeholder="Your full name"
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)}
+              className="flex-1"
+              data-testid="input-author-name"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && authorName.trim()) {
+                  createBook.mutate(authorName.trim());
+                }
+              }}
+            />
+            <Button
+              onClick={() => authorName.trim() && createBook.mutate(authorName.trim())}
+              disabled={!authorName.trim() || createBook.isPending}
+              data-testid="button-start-book"
+            >
+              {createBook.isPending ? "Creating..." : "Start"}
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t py-8 px-4 text-center text-sm text-muted-foreground">
+        <div className="flex items-center justify-center gap-2">
+          <Feather className="w-4 h-4 text-primary" />
+          <span className="font-serif font-bold">Manifesto</span>
+        </div>
+        <p className="mt-2">Your life deserves to be remembered.</p>
+      </footer>
+
+      {showStart && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowStart(false)}
+        >
+          <Card
+            className="w-full max-w-md p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-6">
+              <Feather className="w-8 h-8 text-primary mx-auto mb-3" />
+              <h3 className="font-serif text-2xl font-bold">Begin Your Book</h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                Enter your name to start the interview process
+              </p>
+            </div>
+            <div className="space-y-4">
+              <Input
+                placeholder="Your full name"
+                value={authorName}
+                onChange={(e) => setAuthorName(e.target.value)}
+                data-testid="input-author-name-modal"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && authorName.trim()) {
+                    createBook.mutate(authorName.trim());
+                  }
+                }}
+              />
+              <Button
+                className="w-full"
+                onClick={() => authorName.trim() && createBook.mutate(authorName.trim())}
+                disabled={!authorName.trim() || createBook.isPending}
+                data-testid="button-start-modal"
+              >
+                {createBook.isPending ? "Creating your book..." : "Start Interview"}
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
