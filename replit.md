@@ -14,10 +14,11 @@ A personal book creation platform where users go through an AI-guided interview 
 1. **Landing Page** - Clean black and white design with "You & Me" logo
 2. **AI Interview** - 7-category guided conversation (Early Life, Family, Career, Beliefs, Wisdom, Predictions, Legacy)
 3. **Voice Capture** - AI learns how the person speaks and writes the book in their authentic voice
-4. **Photo Uploads** - Attach photos that get embedded in the book
-5. **Book Generation** - AI compiles interview into a book written in the interviewee's voice
-6. **Book Preview** - Beautiful chapter-by-chapter reading view
-7. **Print-Ready Download** - HTML file with base64-embedded photos for manufacturing
+4. **Voice Interaction** - Text-to-speech reads AI prompts aloud (toggle in header); Speech-to-text microphone input transcribes spoken responses (Web Speech API, no external deps)
+5. **Photo Uploads** - Attach photos that get embedded in the book
+6. **Book Generation** - AI compiles interview into a book written in the interviewee's voice
+7. **Book Preview** - Beautiful chapter-by-chapter reading view
+8. **Print-Ready Download** - HTML file with base64-embedded photos for manufacturing
 
 ## Project Structure
 - `shared/schema.ts` - Database schema (books, interview_messages, photos)

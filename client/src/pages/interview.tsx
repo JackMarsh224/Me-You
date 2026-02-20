@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -24,10 +24,89 @@ import {
   X,
   Image as ImageIcon,
   Feather,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import type { Book, InterviewMessage, Photo, InterviewCategory } from "@shared/schema";
 import { INTERVIEW_CATEGORIES } from "@shared/schema";
 import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
+
+const SpeechRecognitionAPI =
+  typeof window !== "undefined"
+    ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    : null;
+
+function useSpeechToText() {
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [supported, setSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    setSupported(!!SpeechRecognitionAPI);
+  }, []);
+
+  const startListening = useCallback(() => {
+    if (!SpeechRecognitionAPI) return;
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    let finalTranscript = "";
+
+    recognition.onresult = (event: any) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += t;
+        } else {
+          interim += t;
+        }
+      }
+      setTranscript(finalTranscript + interim);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+    setTranscript("");
+  }, []);
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
+  }, []);
+
+  return { isListening, transcript, supported, startListening, stopListening };
+}
+
+function speakText(text: string, onEnd?: () => void) {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.95;
+  utterance.pitch = 1;
+  if (onEnd) utterance.onend = onEnd;
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopSpeaking() {
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+}
 
 const categoryIcons: Record<string, any> = {
   early_life: Baby,
@@ -47,9 +126,66 @@ export default function Interview() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamedContent, setStreamedContent] = useState("");
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("you-and-me-tts") === "true";
+    }
+    return false;
+  });
+  const [speakingMsgId, setSpeakingMsgId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const ttsEnabledRef = useRef(ttsEnabled);
+
+  const { isListening, transcript, supported: sttSupported, startListening, stopListening } = useSpeechToText();
+
+  useEffect(() => {
+    ttsEnabledRef.current = ttsEnabled;
+    localStorage.setItem("you-and-me-tts", String(ttsEnabled));
+  }, [ttsEnabled]);
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isListening && transcript) {
+      setMessage(transcript);
+    }
+  }, [transcript, isListening]);
+
+  const toggleTts = () => {
+    setTtsEnabled((prev) => {
+      if (prev) {
+        stopSpeaking();
+        setSpeakingMsgId(null);
+      }
+      return !prev;
+    });
+  };
+
+  const handleSpeak = (text: string, msgId: number) => {
+    if (speakingMsgId === msgId) {
+      stopSpeaking();
+      setSpeakingMsgId(null);
+      return;
+    }
+    setSpeakingMsgId(msgId);
+    speakText(text, () => setSpeakingMsgId(null));
+  };
+
+  const handleMicToggle = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      stopSpeaking();
+      setSpeakingMsgId(null);
+      startListening();
+    }
+  };
 
   const { data: book, isLoading: bookLoading } = useQuery<Book>({
     queryKey: ["/api/books", id],
@@ -96,6 +232,7 @@ export default function Interview() {
       ]
     );
 
+    let fullResponse = "";
     try {
       const res = await fetch(`/api/books/${id}/chat`, {
         method: "POST",
@@ -108,7 +245,6 @@ export default function Interview() {
 
       const decoder = new TextDecoder();
       let buffer = "";
-      let fullResponse = "";
 
       while (true) {
         const { done, value } = await reader.read();
@@ -137,6 +273,9 @@ export default function Interview() {
       console.error("Error sending message:", error);
     } finally {
       setIsStreaming(false);
+      if (fullResponse && ttsEnabledRef.current) {
+        speakText(fullResponse);
+      }
       setStreamedContent("");
     }
   };
@@ -225,6 +364,16 @@ export default function Interview() {
               <Button
                 size="icon"
                 variant="ghost"
+                onClick={toggleTts}
+                title={ttsEnabled ? "Turn off read aloud" : "Turn on read aloud"}
+                data-testid="button-toggle-tts"
+                className={ttsEnabled ? "text-primary" : ""}
+              >
+                {ttsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
                 onClick={() => setShowPhotoUpload(true)}
                 data-testid="button-upload-photo"
               >
@@ -300,7 +449,7 @@ export default function Interview() {
             messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex group ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 data-testid={`message-${msg.role}-${msg.id}`}
               >
                 <div
@@ -311,8 +460,20 @@ export default function Interview() {
                   }`}
                 >
                   {msg.role === "assistant" && (
-                    <div className="flex items-center gap-1.5 mb-1.5">
+                    <div className="flex items-center justify-between gap-1.5 mb-1.5">
                       <img src={logoImage} alt="" className="h-3.5 object-contain" />
+                      <button
+                        onClick={() => handleSpeak(msg.content, msg.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
+                        title={speakingMsgId === msg.id ? "Stop reading" : "Read aloud"}
+                        data-testid={`button-speak-${msg.id}`}
+                      >
+                        {speakingMsgId === msg.id ? (
+                          <VolumeX className="w-3 h-3 text-muted-foreground" />
+                        ) : (
+                          <Volume2 className="w-3 h-3 text-muted-foreground" />
+                        )}
+                      </button>
                     </div>
                   )}
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
@@ -373,12 +534,21 @@ export default function Interview() {
 
       <div className="border-t bg-background shrink-0">
         <div className="max-w-3xl mx-auto px-4 py-3">
+          {isListening && (
+            <div className="flex items-center gap-2 mb-2 px-1">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+              </span>
+              <span className="text-xs text-muted-foreground">Listening... tap the mic to stop</span>
+            </div>
+          )}
           <div className="flex gap-2">
             <Textarea
               ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Share your thoughts..."
+              placeholder={isListening ? "Listening..." : "Share your thoughts..."}
               className="flex-1 resize-none min-h-[44px] max-h-32"
               rows={1}
               data-testid="input-message"
@@ -389,6 +559,19 @@ export default function Interview() {
                 }
               }}
             />
+            {sttSupported && (
+              <Button
+                size="icon"
+                variant={isListening ? "default" : "outline"}
+                onClick={handleMicToggle}
+                disabled={isStreaming}
+                title={isListening ? "Stop listening" : "Use microphone"}
+                data-testid="button-mic"
+                className={isListening ? "animate-pulse" : ""}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </Button>
+            )}
             <Button
               size="icon"
               onClick={sendMessage}
@@ -399,7 +582,9 @@ export default function Interview() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-1.5 text-center">
-            Press Enter to send, Shift+Enter for new line
+            {sttSupported
+              ? "Type, use your mic, or press Enter to send"
+              : "Press Enter to send, Shift+Enter for new line"}
           </p>
         </div>
       </div>
