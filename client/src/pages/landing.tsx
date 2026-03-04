@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { MessageCircle, Camera, Download, ArrowRight, BookOpen } from "lucide-react";
+import { MessageCircle, Camera, Package, ArrowRight, BookOpen } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
@@ -41,9 +41,9 @@ export default function Landing() {
       description: "Your words are crafted into a professionally designed, print-ready book.",
     },
     {
-      icon: Download,
-      title: "Print-Ready Download",
-      description: "Download your finished book, ready to send to any print manufacturer.",
+      icon: Package,
+      title: "Shipped to Your Door",
+      description: "Once you're happy with your book, we'll print and ship it straight to you.",
     },
   ];
 
@@ -99,7 +99,7 @@ export default function Landing() {
             How It Works
           </h2>
           <p className="text-muted-foreground text-center max-w-xl mx-auto mb-12">
-            From conversation to printed book in four simple steps
+            From conversation to a beautiful book, shipped right to your door
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, i) => (

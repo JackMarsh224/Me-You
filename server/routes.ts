@@ -147,6 +147,25 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/books/:id/pay", async (req, res) => {
+    try {
+      const bookId = Number(req.params.id);
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ error: "Book not found" });
+      if (book.status !== "completed") {
+        return res.status(400).json({ error: "Book must be generated before payment" });
+      }
+
+      // TODO: Integrate Stripe payment processing here
+      // For now, mark as paid directly (placeholder)
+      const updatedBook = await storage.updateBook(bookId, { paid: true });
+      res.json(updatedBook);
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      res.status(500).json({ error: "Failed to process payment" });
+    }
+  });
+
   app.post("/api/books/:id/generate", async (req, res) => {
     try {
       const bookId = Number(req.params.id);
@@ -176,6 +195,9 @@ export async function registerRoutes(
       const book = await storage.getBook(bookId);
       if (!book || !book.generatedContent) {
         return res.status(404).json({ error: "Book not found or not generated" });
+      }
+      if (!book.paid) {
+        return res.status(403).json({ error: "Payment required to download the book" });
       }
 
       const bookPhotos = await storage.getPhotos(bookId);

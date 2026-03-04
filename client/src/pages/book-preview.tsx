@@ -9,6 +9,7 @@ import {
   Download,
   MessageCircle,
   Loader2,
+  CreditCard,
 } from "lucide-react";
 import type { Book, Photo } from "@shared/schema";
 import { useState } from "react";
@@ -18,6 +19,7 @@ export default function BookPreview() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const [downloading, setDownloading] = useState(false);
+  const isPreviewOnly = window.location.pathname.endsWith("/preview");
 
   const { data: book, isLoading: bookLoading } = useQuery<Book>({
     queryKey: ["/api/books", id],
@@ -88,6 +90,11 @@ export default function BookPreview() {
     );
   }
 
+  if (!isPreviewOnly && !book.paid) {
+    navigate(`/book/${id}/checkout`);
+    return null;
+  }
+
   const chapters = parseBookContent(book.generatedContent);
 
   return (
@@ -111,18 +118,36 @@ export default function BookPreview() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              onClick={handleDownload}
-              disabled={downloading}
-              data-testid="button-download"
-            >
-              {downloading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Download className="w-4 h-4 mr-2" />
-              )}
-              {downloading ? "Preparing..." : "Download"}
-            </Button>
+            {isPreviewOnly ? (
+              <Button
+                onClick={() => navigate(`/book/${id}/checkout`)}
+                data-testid="button-order-book"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Order Your Book
+              </Button>
+            ) : book.paid ? (
+              <Button
+                onClick={handleDownload}
+                disabled={downloading}
+                data-testid="button-download"
+              >
+                {downloading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
+                {downloading ? "Preparing..." : "Download"}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => navigate(`/book/${id}/checkout`)}
+                data-testid="button-order-book"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Order Your Book
+              </Button>
+            )}
             <ThemeToggle />
           </div>
         </div>

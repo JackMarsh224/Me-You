@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Landing from "@/pages/landing";
 import Interview from "@/pages/interview";
 import BookPreview from "@/pages/book-preview";
+import Checkout from "@/pages/checkout";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -14,6 +15,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/interview/:id" component={Interview} />
+      <Route path="/book/:id/checkout" component={Checkout} />
+      <Route path="/book/:id/preview" component={BookPreview} />
       <Route path="/book/:id" component={BookPreview} />
       <Route component={NotFound} />
     </Switch>
