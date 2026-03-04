@@ -250,19 +250,49 @@ function checkShouldAdvanceCategory(messageCount: number, lastResponse: string):
 
 function generatePrintHTML(book: any, photos: any[]): string {
   const content = book.generatedContent || "";
+  const photoMap = new Map(photos.map((p: any) => [String(p.id), p]));
   const chapters = content.split(/^## /m).filter(Boolean);
 
   let chaptersHtml = chapters.map((chapter: string, i: number) => {
     const lines = chapter.trim().split("\n");
     const title = lines[0].replace(/^#+\s*/, "");
     const body = lines.slice(1).join("\n").trim();
+
+    const processedBody = body.split("\n\n").map((paragraph: string) => {
+      const trimmed = paragraph.trim();
+      if (!trimmed) return "";
+      const photoRegex = /\[PHOTO:(\d+):([^\]]*)\]/g;
+      if (photoRegex.test(trimmed)) {
+        photoRegex.lastIndex = 0;
+        const parts = trimmed.split(/\[PHOTO:\d+:[^\]]*\]/);
+        const markers = [...trimmed.matchAll(/\[PHOTO:(\d+):([^\]]*)\]/g)];
+        let result = "";
+        parts.forEach((part: string, idx: number) => {
+          const text = part.trim();
+          if (text) result += `<p>${text}</p>`;
+          if (idx < markers.length) {
+            const photo = photoMap.get(markers[idx][1]);
+            if (photo && photo.base64) {
+              result += `
+                <div class="photo">
+                  <img src="data:${photo.mimeType};base64,${photo.base64}" alt="${photo.caption || photo.originalName}" style="max-width: 100%; height: auto; border-radius: 4px;" />
+                  ${photo.caption ? `<p class="photo-caption">${photo.caption}</p>` : `<p class="photo-caption">${photo.originalName}</p>`}
+                </div>
+              `;
+            }
+          }
+        });
+        return result;
+      }
+      return `<p>${trimmed}</p>`;
+    }).join("");
+
     const titleLower = title.toLowerCase();
     const categoryPhotos = photos.filter((p: any) => {
       const cat = (p.category || "").replace("_", " ");
-      return cat && titleLower.includes(cat);
+      return cat && titleLower.includes(cat) && !content.includes(`[PHOTO:${p.id}:`);
     });
-
-    const photosHtml = categoryPhotos.map((p: any) => {
+    const remainingPhotosHtml = categoryPhotos.map((p: any) => {
       if (p.base64) {
         return `
           <div class="photo">
@@ -278,8 +308,8 @@ function generatePrintHTML(book: any, photos: any[]): string {
       <div class="chapter" style="page-break-before: always;">
         <p class="chapter-num">Chapter ${String(i + 1).padStart(2, "0")}</p>
         <h2>${title}</h2>
-        ${body.split("\n\n").map(p => `<p>${p.trim()}</p>`).join("")}
-        ${photosHtml}
+        ${processedBody}
+        ${remainingPhotosHtml}
       </div>
     `;
   }).join("");

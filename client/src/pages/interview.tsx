@@ -28,6 +28,7 @@ import {
   MicOff,
   Volume2,
   VolumeX,
+  ChevronDown,
 } from "lucide-react";
 import type { Book, InterviewMessage, Photo, InterviewCategory } from "@shared/schema";
 import { INTERVIEW_CATEGORIES } from "@shared/schema";
@@ -92,14 +93,34 @@ function useSpeechToText() {
   return { isListening, transcript, supported, startListening, stopListening };
 }
 
-function speakText(text: string, onEnd?: () => void) {
+function speakText(text: string, onEnd?: () => void, voiceName?: string) {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 0.95;
   utterance.pitch = 1;
+  if (voiceName) {
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find((v) => v.name === voiceName);
+    if (voice) utterance.voice = voice;
+  }
   if (onEnd) utterance.onend = onEnd;
   window.speechSynthesis.speak(utterance);
+}
+
+function useVoices() {
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    const loadVoices = () => {
+      const v = window.speechSynthesis.getVoices().filter((v) => v.lang.startsWith("en"));
+      setVoices(v);
+    };
+    loadVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+  }, []);
+  return voices;
 }
 
 function stopSpeaking() {
@@ -126,17 +147,26 @@ export default function Interview() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamedContent, setStreamedContent] = useState("");
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [showVoiceSelector, setShowVoiceSelector] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("you-and-me-tts") === "true";
     }
     return false;
   });
+  const [selectedVoice, setSelectedVoice] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("you-and-me-voice") || "";
+    }
+    return "";
+  });
   const [speakingMsgId, setSpeakingMsgId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ttsEnabledRef = useRef(ttsEnabled);
+  const selectedVoiceRef = useRef(selectedVoice);
+  const availableVoices = useVoices();
 
   const { isListening, transcript, supported: sttSupported, startListening, stopListening } = useSpeechToText();
 
@@ -144,6 +174,11 @@ export default function Interview() {
     ttsEnabledRef.current = ttsEnabled;
     localStorage.setItem("you-and-me-tts", String(ttsEnabled));
   }, [ttsEnabled]);
+
+  useEffect(() => {
+    selectedVoiceRef.current = selectedVoice;
+    localStorage.setItem("you-and-me-voice", selectedVoice);
+  }, [selectedVoice]);
 
   useEffect(() => {
     return () => {
@@ -174,7 +209,7 @@ export default function Interview() {
       return;
     }
     setSpeakingMsgId(msgId);
-    speakText(text, () => setSpeakingMsgId(null));
+    speakText(text, () => setSpeakingMsgId(null), selectedVoice || undefined);
   };
 
   const handleMicToggle = () => {
@@ -209,6 +244,8 @@ export default function Interview() {
   const progress = book?.status === "completed"
     ? 100
     : ((currentCategoryIndex + 1) / INTERVIEW_CATEGORIES.length) * 100;
+
+  const categoryPhotos = photos.filter((p) => p.category === book?.currentCategory);
 
   const sendMessage = async () => {
     if (!message.trim() || isStreaming) return;
@@ -274,7 +311,7 @@ export default function Interview() {
     } finally {
       setIsStreaming(false);
       if (fullResponse && ttsEnabledRef.current) {
-        speakText(fullResponse);
+        speakText(fullResponse, undefined, selectedVoiceRef.current || undefined);
       }
       setStreamedContent("");
     }
@@ -361,16 +398,54 @@ export default function Interview() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={toggleTts}
-                title={ttsEnabled ? "Turn off read aloud" : "Turn on read aloud"}
-                data-testid="button-toggle-tts"
-                className={ttsEnabled ? "text-primary" : ""}
-              >
-                {ttsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              </Button>
+              <div className="relative">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={toggleTts}
+                  title={ttsEnabled ? "Turn off read aloud" : "Turn on read aloud"}
+                  data-testid="button-toggle-tts"
+                  className={ttsEnabled ? "text-primary" : ""}
+                >
+                  {ttsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                </Button>
+                {ttsEnabled && availableVoices.length > 0 && (
+                  <button
+                    onClick={() => setShowVoiceSelector(!showVoiceSelector)}
+                    className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
+                    title="Choose voice"
+                    data-testid="button-voice-selector"
+                  >
+                    <ChevronDown className="w-2.5 h-2.5" />
+                  </button>
+                )}
+                {showVoiceSelector && (
+                  <div className="absolute top-full right-0 mt-2 w-64 max-h-60 overflow-y-auto bg-popover border rounded-md shadow-lg z-50 p-1" data-testid="voice-selector-dropdown">
+                    <p className="text-xs text-muted-foreground px-2 py-1.5 font-medium">Choose interviewer voice</p>
+                    <button
+                      className={`w-full text-left text-sm px-2 py-1.5 rounded-sm hover:bg-accent ${!selectedVoice ? "bg-accent font-medium" : ""}`}
+                      onClick={() => { setSelectedVoice(""); setShowVoiceSelector(false); }}
+                      data-testid="voice-option-default"
+                    >
+                      Default voice
+                    </button>
+                    {availableVoices.map((v) => (
+                      <button
+                        key={v.name}
+                        className={`w-full text-left text-sm px-2 py-1.5 rounded-sm hover:bg-accent ${selectedVoice === v.name ? "bg-accent font-medium" : ""}`}
+                        onClick={() => {
+                          setSelectedVoice(v.name);
+                          setShowVoiceSelector(false);
+                          speakText("Hello, I'll be your interviewer today.", undefined, v.name);
+                        }}
+                        data-testid={`voice-option-${v.name}`}
+                      >
+                        {v.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Button
                 size="icon"
                 variant="ghost"
@@ -512,22 +587,30 @@ export default function Interview() {
         <div className="border-t bg-card/50 shrink-0">
           <div className="max-w-4xl mx-auto px-4 py-2 flex items-center gap-2 overflow-x-auto">
             <ImageIcon className="w-4 h-4 text-muted-foreground shrink-0" />
-            {photos.map((photo) => (
-              <div
-                key={photo.id}
-                className="w-10 h-10 rounded-md overflow-hidden shrink-0 border"
-                data-testid={`photo-thumb-${photo.id}`}
-              >
-                <img
-                  src={`/api/uploads/${photo.filename}`}
-                  alt={photo.caption || "Photo"}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-            <span className="text-xs text-muted-foreground shrink-0">
-              {photos.length} photo{photos.length !== 1 ? "s" : ""} attached
-            </span>
+            {categoryPhotos.length > 0 ? (
+              <>
+                {categoryPhotos.map((photo) => (
+                  <div
+                    key={photo.id}
+                    className="w-10 h-10 rounded-md overflow-hidden shrink-0 border"
+                    data-testid={`photo-thumb-${photo.id}`}
+                  >
+                    <img
+                      src={`/api/uploads/${photo.filename}`}
+                      alt={photo.caption || "Photo"}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {categoryPhotos.length} for {currentCategory?.label || "this section"} ({photos.length} total)
+                </span>
+              </>
+            ) : (
+              <span className="text-xs text-muted-foreground shrink-0">
+                {photos.length} photo{photos.length !== 1 ? "s" : ""} attached
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -606,17 +689,26 @@ export default function Interview() {
                 <X className="w-4 h-4" />
               </Button>
             </div>
+            {currentCategory && (
+              <div className="flex items-center gap-2 mb-3 p-2 rounded-md bg-muted">
+                <CurrentIcon className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{currentCategory.label}</span>
+              </div>
+            )}
             <p className="text-sm text-muted-foreground mb-4">
-              Add photos that are meaningful to this chapter of your life. They'll be woven into your book.
+              Add photos from {currentCategory ? `your ${currentCategory.label.toLowerCase()} era` : "this chapter of your life"}. They'll be woven into your book at the right moments.
             </p>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) uploadPhoto.mutate(file);
+                const files = e.target.files;
+                if (files) {
+                  Array.from(files).forEach((file) => uploadPhoto.mutate(file));
+                }
               }}
               data-testid="input-file-upload"
             />
@@ -632,22 +724,25 @@ export default function Interview() {
               ) : (
                 <Camera className="w-4 h-4 mr-2" />
               )}
-              {uploadPhoto.isPending ? "Uploading..." : "Choose Photo"}
+              {uploadPhoto.isPending ? "Uploading..." : "Choose Photos"}
             </Button>
-            {photos.length > 0 && (
-              <div className="mt-4 grid grid-cols-4 gap-2">
-                {photos.map((photo) => (
-                  <div
-                    key={photo.id}
-                    className="aspect-square rounded-md overflow-hidden border"
-                  >
-                    <img
-                      src={`/api/uploads/${photo.filename}`}
-                      alt={photo.caption || "Photo"}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
+            {categoryPhotos.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs text-muted-foreground mb-2">{currentCategory?.label || "Current section"} photos ({categoryPhotos.length})</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {categoryPhotos.map((photo) => (
+                    <div
+                      key={photo.id}
+                      className="aspect-square rounded-md overflow-hidden border"
+                    >
+                      <img
+                        src={`/api/uploads/${photo.filename}`}
+                        alt={photo.caption || "Photo"}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </Card>

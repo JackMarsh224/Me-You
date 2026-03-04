@@ -158,8 +158,12 @@ export default function BookPreview() {
 
         <div className="space-y-16">
           {chapters.map((chapter, i) => {
-            const chapterPhotos = photos.filter(
-              (p) => p.category === chapter.category
+            const photoMap = new Map(photos.map((p) => [p.id, p]));
+            const usedPhotoIds = new Set(
+              chapter.content.filter((c) => c.type === "photo").map((c) => c.photoId)
+            );
+            const remainingCategoryPhotos = photos.filter(
+              (p) => p.category === chapter.category && !usedPhotoIds.has(p.id)
             );
             return (
               <section key={i} data-testid={`chapter-${i}`}>
@@ -173,16 +177,36 @@ export default function BookPreview() {
                 </div>
 
                 <div className="prose prose-lg max-w-none dark:prose-invert font-serif leading-relaxed">
-                  {chapter.paragraphs.map((p, j) => (
-                    <p key={j} className="text-foreground/90 mb-4 leading-relaxed">
-                      {p}
-                    </p>
-                  ))}
+                  {chapter.content.map((item, j) => {
+                    if (item.type === "photo") {
+                      const photo = photoMap.get(item.photoId!);
+                      if (!photo) return null;
+                      return (
+                        <figure key={`photo-${j}`} className="my-8 space-y-2" data-testid={`photo-${photo.id}`}>
+                          <div className="rounded-md overflow-hidden border">
+                            <img
+                              src={`/api/uploads/${photo.filename}`}
+                              alt={photo.caption || photo.originalName}
+                              className="w-full object-cover"
+                            />
+                          </div>
+                          <figcaption className="text-xs text-muted-foreground text-center italic">
+                            {photo.caption || photo.originalName}
+                          </figcaption>
+                        </figure>
+                      );
+                    }
+                    return (
+                      <p key={j} className="text-foreground/90 mb-4 leading-relaxed">
+                        {item.text}
+                      </p>
+                    );
+                  })}
                 </div>
 
-                {chapterPhotos.length > 0 && (
+                {remainingCategoryPhotos.length > 0 && (
                   <div className="mt-8 grid grid-cols-2 gap-4">
-                    {chapterPhotos.map((photo) => (
+                    {remainingCategoryPhotos.map((photo) => (
                       <figure key={photo.id} className="space-y-2" data-testid={`photo-${photo.id}`}>
                         <div className="rounded-md overflow-hidden border">
                           <img
@@ -219,10 +243,17 @@ export default function BookPreview() {
   );
 }
 
+interface ChapterContent {
+  type: "text" | "photo";
+  text?: string;
+  photoId?: number;
+}
+
 interface Chapter {
   title: string;
   category?: string;
   paragraphs: string[];
+  content: ChapterContent[];
 }
 
 function parseBookContent(content: string): Chapter[] {
@@ -252,7 +283,7 @@ function parseBookContent(content: string): Chapter[] {
     if (!trimmed) continue;
 
     if (trimmed.startsWith("# ") || trimmed.startsWith("## ")) {
-      if (currentChapter && currentChapter.paragraphs.length > 0) {
+      if (currentChapter && (currentChapter.paragraphs.length > 0 || currentChapter.content.length > 0)) {
         chapters.push(currentChapter);
       }
       const title = trimmed.replace(/^#+\s*/, "");
@@ -264,15 +295,33 @@ function parseBookContent(content: string): Chapter[] {
           break;
         }
       }
-      currentChapter = { title, category, paragraphs: [] };
+      currentChapter = { title, category, paragraphs: [], content: [] };
     } else if (currentChapter) {
-      currentChapter.paragraphs.push(trimmed);
+      const photoRegex = /\[PHOTO:(\d+):([^\]]*)\]/g;
+      if (photoRegex.test(trimmed)) {
+        photoRegex.lastIndex = 0;
+        const parts = trimmed.split(/\[PHOTO:\d+:[^\]]*\]/);
+        const markers = [...trimmed.matchAll(/\[PHOTO:(\d+):([^\]]*)\]/g)];
+        parts.forEach((part, idx) => {
+          const text = part.trim();
+          if (text) {
+            currentChapter!.paragraphs.push(text);
+            currentChapter!.content.push({ type: "text", text });
+          }
+          if (idx < markers.length) {
+            currentChapter!.content.push({ type: "photo", photoId: Number(markers[idx][1]) });
+          }
+        });
+      } else {
+        currentChapter.paragraphs.push(trimmed);
+        currentChapter.content.push({ type: "text", text: trimmed });
+      }
     } else {
-      currentChapter = { title: "Prologue", paragraphs: [trimmed] };
+      currentChapter = { title: "Prologue", paragraphs: [trimmed], content: [{ type: "text", text: trimmed }] };
     }
   }
 
-  if (currentChapter && currentChapter.paragraphs.length > 0) {
+  if (currentChapter && (currentChapter.paragraphs.length > 0 || currentChapter.content.length > 0)) {
     chapters.push(currentChapter);
   }
 
