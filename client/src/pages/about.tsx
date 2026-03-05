@@ -13,7 +13,7 @@ export default function About() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <Link href="/">
-            <img src={logoImage} alt="You & Me" className="h-8 object-contain cursor-pointer" data-testid="img-logo" />
+            <img src={logoImage} alt="You & Me" className="h-8 object-contain cursor-pointer mix-blend-multiply dark:mix-blend-screen dark:invert" data-testid="img-logo" />
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -127,7 +127,7 @@ export default function About() {
       </main>
 
       <footer className="border-t py-8 px-4 text-center text-sm text-muted-foreground">
-        <img src={logoImage} alt="You & Me" className="h-6 mx-auto object-contain mb-2" />
+        <img src={logoImage} alt="You & Me" className="h-6 mx-auto object-contain mb-2 mix-blend-multiply dark:mix-blend-screen dark:invert" />
         <p>Your life deserves to be remembered.</p>
       </footer>
     </div>

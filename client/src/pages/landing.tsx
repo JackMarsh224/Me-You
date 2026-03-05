@@ -199,7 +199,7 @@ export default function Landing() {
       </section>
 
       <footer className="border-t py-8 px-4 text-center text-sm text-muted-foreground">
-        <img src={logoImage} alt="You & Me" className="h-6 mx-auto object-contain mb-2" />
+        <img src={logoImage} alt="You & Me" className="h-6 mx-auto object-contain mb-2 mix-blend-multiply dark:mix-blend-screen dark:invert" />
         <p>Your life deserves to be remembered.</p>
       </footer>
 
@@ -213,7 +213,7 @@ export default function Landing() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-6">
-              <img src={logoImage} alt="You & Me" className="h-12 mx-auto object-contain mb-3" />
+              <img src={logoImage} alt="You & Me" className="h-12 mx-auto object-contain mb-3 mix-blend-multiply dark:mix-blend-screen dark:invert" />
               <h3 className="font-serif text-2xl font-bold">Begin Your Book</h3>
               <p className="text-sm text-muted-foreground mt-2">
                 Enter your name to start the interview process
