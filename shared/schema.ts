@@ -3,10 +3,18 @@ import { pgTable, text, varchar, serial, integer, timestamp, boolean } from "dri
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
 export const books = pgTable("books", {
   id: serial("id").primaryKey(),
   title: text("title").notNull().default("My Personal Manifesto"),
   authorName: text("author_name").notNull(),
+  userId: integer("user_id").references(() => users.id),
   subtitle: text("subtitle"),
   dedication: text("dedication"),
   status: text("status").notNull().default("interviewing"),
@@ -37,6 +45,23 @@ export const photos = pgTable("photos", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
+export const videos = pgTable("videos", {
+  id: serial("id").primaryKey(),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  userId: integer("user_id").references(() => users.id),
+  filename: text("filename").notNull(),
+  originalName: text("original_name").notNull(),
+  title: text("title"),
+  description: text("description"),
+  category: text("category"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertBookSchema = createInsertSchema(books).omit({
   id: true,
   createdAt: true,
@@ -52,12 +77,21 @@ export const insertPhotoSchema = createInsertSchema(photos).omit({
   createdAt: true,
 });
 
+export const insertVideoSchema = createInsertSchema(videos).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Book = typeof books.$inferSelect;
 export type InsertBook = z.infer<typeof insertBookSchema>;
 export type InterviewMessage = typeof interviewMessages.$inferSelect;
 export type InsertInterviewMessage = z.infer<typeof insertInterviewMessageSchema>;
 export type Photo = typeof photos.$inferSelect;
 export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
+export type Video = typeof videos.$inferSelect;
+export type InsertVideo = z.infer<typeof insertVideoSchema>;
 
 export const INTERVIEW_CATEGORIES = [
   { id: "early_life", label: "Early Life & Childhood", icon: "baby" },

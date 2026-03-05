@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { Book, InterviewMessage, Photo } from "@shared/schema";
+import type { Book, InterviewMessage, Photo, Video } from "@shared/schema";
 import { INTERVIEW_CATEGORIES } from "@shared/schema";
 
 const openai = new OpenAI({
@@ -113,7 +113,8 @@ export async function interviewChat(
 export async function generateBookContent(
   book: Book,
   messages: InterviewMessage[],
-  photos: Photo[]
+  photos: Photo[],
+  videos: Video[] = []
 ): Promise<string> {
   const interviewTranscript = messages
     .map((m) => `${m.role === "user" ? book.authorName : "Interviewer"}: ${m.content}`)
@@ -136,6 +137,10 @@ export async function generateBookContent(
       return `Section "${catLabel}": ${catPhotos.length} photo(s) — ${catPhotos.map((p, i) => `[PHOTO:${p.id}:${p.originalName}${p.caption ? ` — ${p.caption}` : ""}]`).join(", ")}`;
     })
     .join("\n");
+
+  const videoPlaceholders = videos.length > 0
+    ? videos.map(v => `[VIDEO_QR:${v.id}:${v.title || v.originalName}]`).join("\n")
+    : "";
 
   const response = await openai.chat.completions.create({
     model: "gpt-5.2",
@@ -174,6 +179,12 @@ PHOTO PLACEMENT:
 - Place each photo marker on its own line, right after the paragraph where it fits best contextually.
 - Every provided photo MUST appear in the book.
 
+VIDEO QR CODES:
+- Videos are provided with markers like [VIDEO_QR:id:title]. These will become scannable QR codes in the printed book.
+- Place each video QR marker on its own line at the most relevant point in the narrative.
+- Add a brief line before each QR code like "Scan to watch:" or "Watch this moment come alive:" followed by the marker.
+- Every provided video MUST appear in the book.
+
 Format the book in Markdown:
 - Use ## for chapter titles (## Prologue, ## Chapter Title, ## Epilogue)
 - Write flowing prose paragraphs — long, rich, detailed
@@ -189,6 +200,9 @@ ${interviewTranscript}
 
 Photos to embed in the book (place these markers at appropriate points in the narrative):
 ${photoPlaceholders || "No photos provided."}
+
+Videos with QR codes to embed in the book (place these markers where readers should scan to watch):
+${videoPlaceholders || "No videos provided."}
 
 Please write the COMPLETE book based on this interview. This must be a full-length book — at least 50 printed pages. Each chapter should be deeply detailed, rich with storytelling, and capture ${book.authorName}'s authentic voice. When they read this, they should think "this is me."
 

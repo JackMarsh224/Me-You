@@ -29,7 +29,9 @@ import {
   Volume2,
   VolumeX,
   ChevronDown,
+  Video,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import type { Book, InterviewMessage, Photo, InterviewCategory } from "@shared/schema";
 import { INTERVIEW_CATEGORIES } from "@shared/schema";
 import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
@@ -147,6 +149,8 @@ export default function Interview() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamedContent, setStreamedContent] = useState("");
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [showVideoUpload, setShowVideoUpload] = useState(false);
+  const [videoTitle, setVideoTitle] = useState("");
   const [showVoiceSelector, setShowVoiceSelector] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(() => {
     if (typeof window !== "undefined") {
@@ -164,6 +168,7 @@ export default function Interview() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const ttsEnabledRef = useRef(ttsEnabled);
   const selectedVoiceRef = useRef(selectedVoice);
   const availableVoices = useVoices();
@@ -335,6 +340,32 @@ export default function Interview() {
     },
   });
 
+  const uploadVideo = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("video", file);
+      formData.append("category", book?.currentCategory || "");
+      formData.append("title", videoTitle || file.name);
+      const res = await fetch(`/api/books/${id}/videos`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/books", id, "videos"] });
+      setShowVideoUpload(false);
+      setVideoTitle("");
+    },
+  });
+
+  const { data: bookVideos = [] } = useQuery<any[]>({
+    queryKey: ["/api/books", id, "videos"],
+    enabled: !!id,
+  });
+
   const generateBook = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", `/api/books/${id}/generate`);
@@ -453,6 +484,14 @@ export default function Interview() {
                 data-testid="button-upload-photo"
               >
                 <Camera className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setShowVideoUpload(true)}
+                data-testid="button-upload-video"
+              >
+                <Video className="w-4 h-4" />
               </Button>
               {book.status === "interviewing" && messages.length > 5 && (
                 <Button
@@ -740,6 +779,76 @@ export default function Interview() {
                         alt={photo.caption || "Photo"}
                         className="w-full h-full object-cover"
                       />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {showVideoUpload && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowVideoUpload(false)}
+        >
+          <Card className="w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <h3 className="font-serif font-bold text-lg">Upload Video</h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setShowVideoUpload(false)}
+                data-testid="button-close-video-upload"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Record a video of yourself telling a story, sharing a memory, or anything you'd like to include. A QR code will be added to your book so readers can watch it.
+            </p>
+            <div className="space-y-3">
+              <Input
+                placeholder="Video title (optional)"
+                value={videoTitle}
+                onChange={(e) => setVideoTitle(e.target.value)}
+                data-testid="input-video-title"
+              />
+              <input
+                ref={videoInputRef}
+                type="file"
+                accept="video/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadVideo.mutate(file);
+                }}
+                data-testid="input-video-upload"
+              />
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => videoInputRef.current?.click()}
+                disabled={uploadVideo.isPending}
+                data-testid="button-choose-video"
+              >
+                {uploadVideo.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Video className="w-4 h-4 mr-2" />
+                )}
+                {uploadVideo.isPending ? "Uploading..." : "Choose Video"}
+              </Button>
+            </div>
+            {bookVideos.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs text-muted-foreground mb-2">Uploaded videos ({bookVideos.length})</p>
+                <div className="space-y-2">
+                  {bookVideos.map((v: any) => (
+                    <div key={v.id} className="flex items-center gap-2 p-2 rounded-md bg-muted text-sm">
+                      <Video className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <span className="truncate">{v.title || v.originalName}</span>
                     </div>
                   ))}
                 </div>

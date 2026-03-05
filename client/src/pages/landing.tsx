@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { MessageCircle, Camera, Package, ArrowRight, BookOpen } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { MessageCircle, Camera, Package, ArrowRight, BookOpen, User, Library } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
 import heroBg from "@assets/u6741236396_make_an_artistic_marketing_image_of_legacy_and_st__1772704006312.png";
 
@@ -14,6 +14,11 @@ export default function Landing() {
   const [, navigate] = useLocation();
   const [authorName, setAuthorName] = useState("");
   const [showStart, setShowStart] = useState(false);
+
+  const { data: user } = useQuery<{ id: number; username: string } | null>({
+    queryKey: ["/api/user"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
 
   const createBook = useMutation({
     mutationFn: async (name: string) => {
@@ -60,6 +65,17 @@ export default function Landing() {
             <Button variant="ghost" size="sm" onClick={() => navigate("/about")} data-testid="button-nav-about">
               About Us
             </Button>
+            {user ? (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/my-library")} data-testid="button-nav-my-library">
+                <Library className="w-4 h-4 mr-1" />
+                My Library
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/login")} data-testid="button-nav-sign-in">
+                <User className="w-4 h-4 mr-1" />
+                Sign In
+              </Button>
+            )}
             <ThemeToggle />
             <Button
               size="sm"

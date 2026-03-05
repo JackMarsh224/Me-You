@@ -5,6 +5,7 @@ import { interviewChat, generateBookContent, getInitialQuestion } from "./ai";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import QRCode from "qrcode";
 import { INTERVIEW_CATEGORIES } from "@shared/schema";
 
 const uploadsDir = path.join(process.cwd(), "uploads");
@@ -30,6 +31,24 @@ const upload = multer({
   },
 });
 
+const videoUpload = multer({
+  storage: multer.diskStorage({
+    destination: uploadsDir,
+    filename: (_, file, cb) => {
+      const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2)}${path.extname(file.originalname)}`;
+      cb(null, uniqueName);
+    },
+  }),
+  limits: { fileSize: 100 * 1024 * 1024 },
+  fileFilter: (_, file, cb) => {
+    if (file.mimetype.startsWith("video/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only videos are allowed"));
+    }
+  },
+});
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -45,6 +64,7 @@ export async function registerRoutes(
         title: `${authorName.trim()}'s Story`,
         status: "interviewing",
         currentCategory: "early_life",
+        userId: req.isAuthenticated() ? req.user!.id : null,
       });
 
       const initialQ = await getInitialQuestion(authorName.trim());
@@ -194,8 +214,9 @@ export async function registerRoutes(
 
       const messages = await storage.getMessages(bookId);
       const photos = await storage.getPhotos(bookId);
+      const videos = await storage.getVideosByBookId(bookId);
 
-      const bookContent = await generateBookContent(book, messages, photos);
+      const bookContent = await generateBookContent(book, messages, photos, videos);
 
       const updatedBook = await storage.updateBook(bookId, {
         status: "completed",
@@ -235,7 +256,17 @@ export async function registerRoutes(
         return { ...photo, base64, mimeType };
       });
 
-      const html = generatePrintHTML(book, photosWithData);
+      const bookVideos = await storage.getVideosByBookId(bookId);
+      const host = req.get("host") || "localhost:5000";
+      const protocol = req.get("x-forwarded-proto") || req.protocol;
+      const videoQrMap = new Map<string, string>();
+      for (const video of bookVideos) {
+        const videoUrl = `${protocol}://${host}/video/${video.id}`;
+        const qrBuffer = await QRCode.toBuffer(videoUrl, { width: 200, margin: 2 });
+        videoQrMap.set(String(video.id), qrBuffer.toString("base64"));
+      }
+
+      const html = generatePrintHTML(book, photosWithData, videoQrMap);
 
       res.setHeader("Content-Type", "text/html");
       res.setHeader("Content-Disposition", `attachment; filename="${book.authorName}-you-and-me.html"`);
@@ -281,6 +312,93 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/books/:id/videos", videoUpload.single("video"), async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: "No video uploaded" });
+
+      const video = await storage.createVideo({
+        bookId: Number(req.params.id),
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        title: (req.body.title as string) || null,
+        description: (req.body.description as string) || null,
+        category: (req.body.category as string) || null,
+        userId: req.isAuthenticated() ? req.user!.id : null,
+      });
+
+      res.status(201).json(video);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to upload video" });
+    }
+  });
+
+  app.get("/api/books/:id/videos", async (req, res) => {
+    try {
+      const videos = await storage.getVideosByBookId(Number(req.params.id));
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch videos" });
+    }
+  });
+
+  app.get("/api/videos/:id", async (req, res) => {
+    try {
+      const video = await storage.getVideo(Number(req.params.id));
+      if (!video) return res.status(404).json({ error: "Video not found" });
+      const book = await storage.getBook(video.bookId);
+      res.json({ ...video, authorName: book?.authorName || "Unknown" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch video" });
+    }
+  });
+
+  app.get("/api/videos/:id/qr", async (req, res) => {
+    try {
+      const videoId = Number(req.params.id);
+      const video = await storage.getVideo(videoId);
+      if (!video) return res.status(404).json({ error: "Video not found" });
+
+      const host = req.get("host") || "localhost:5000";
+      const protocol = req.get("x-forwarded-proto") || req.protocol;
+      const videoUrl = `${protocol}://${host}/video/${videoId}`;
+
+      const qrBuffer = await QRCode.toBuffer(videoUrl, {
+        width: 300,
+        margin: 2,
+        color: { dark: "#000000", light: "#ffffff" },
+      });
+
+      res.setHeader("Content-Type", "image/png");
+      res.send(qrBuffer);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to generate QR code" });
+    }
+  });
+
+  app.get("/api/my-books", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      const books = await storage.getBooksByUserId(req.user!.id);
+      res.json(books);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch books" });
+    }
+  });
+
+  app.get("/api/my-videos", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      const videos = await storage.getVideosByUserId(req.user!.id);
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch videos" });
+    }
+  });
+
   return httpServer;
 }
 
@@ -290,7 +408,7 @@ function checkShouldAdvanceCategory(messageCount: number, lastResponse: string):
   return perCategoryCount >= categoryMessageThreshold - 1;
 }
 
-function generatePrintHTML(book: any, photos: any[]): string {
+function generatePrintHTML(book: any, photos: any[], videoQrMap: Map<string, string> = new Map()): string {
   const content = book.generatedContent || "";
   const photoMap = new Map(photos.map((p: any) => [String(p.id), p]));
   const chapters = content.split(/^## /m).filter(Boolean);
@@ -303,11 +421,35 @@ function generatePrintHTML(book: any, photos: any[]): string {
     const processedBody = body.split("\n\n").map((paragraph: string) => {
       const trimmed = paragraph.trim();
       if (!trimmed) return "";
+      const videoQrRegex = /\[VIDEO_QR:(\d+):([^\]]*)\]/g;
+      if (videoQrRegex.test(trimmed)) {
+        videoQrRegex.lastIndex = 0;
+        const parts = trimmed.split(/\[VIDEO_QR:\d+:[^\]]*\]/);
+        const markers = Array.from(trimmed.matchAll(/\[VIDEO_QR:(\d+):([^\]]*)\]/g));
+        let result = "";
+        parts.forEach((part: string, idx: number) => {
+          const text = part.trim();
+          if (text) result += `<p>${text}</p>`;
+          if (idx < markers.length) {
+            const qrBase64 = videoQrMap.get(markers[idx][1]);
+            if (qrBase64) {
+              result += `
+                <div class="photo" style="text-align: center;">
+                  <p style="font-size: 9pt; color: #666; margin-bottom: 8pt;">Scan to watch</p>
+                  <img src="data:image/png;base64,${qrBase64}" alt="QR code: ${markers[idx][2]}" style="width: 150px; height: 150px;" />
+                  <p class="photo-caption">${markers[idx][2]}</p>
+                </div>
+              `;
+            }
+          }
+        });
+        return result;
+      }
       const photoRegex = /\[PHOTO:(\d+):([^\]]*)\]/g;
       if (photoRegex.test(trimmed)) {
         photoRegex.lastIndex = 0;
         const parts = trimmed.split(/\[PHOTO:\d+:[^\]]*\]/);
-        const markers = [...trimmed.matchAll(/\[PHOTO:(\d+):([^\]]*)\]/g)];
+        const markers = Array.from(trimmed.matchAll(/\[PHOTO:(\d+):([^\]]*)\]/g));
         let result = "";
         parts.forEach((part: string, idx: number) => {
           const text = part.trim();

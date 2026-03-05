@@ -221,6 +221,27 @@ export default function BookPreview() {
                         </figure>
                       );
                     }
+                    if (item.type === "video_qr") {
+                      return (
+                        <div key={`video-qr-${j}`} className="my-8 flex flex-col items-center gap-3 p-6 rounded-lg border bg-card" data-testid={`video-qr-${item.videoId}`}>
+                          <p className="text-sm font-medium text-muted-foreground">Scan to watch</p>
+                          <img
+                            src={`/api/videos/${item.videoId}/qr`}
+                            alt={`QR code for ${item.videoTitle}`}
+                            className="w-40 h-40"
+                          />
+                          <p className="text-sm font-serif italic">{item.videoTitle}</p>
+                          <a
+                            href={`/video/${item.videoId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary underline"
+                          >
+                            Watch video
+                          </a>
+                        </div>
+                      );
+                    }
                     return (
                       <p key={j} className="text-foreground/90 mb-4 leading-relaxed">
                         {item.text}
@@ -269,9 +290,11 @@ export default function BookPreview() {
 }
 
 interface ChapterContent {
-  type: "text" | "photo";
+  type: "text" | "photo" | "video_qr";
   text?: string;
   photoId?: number;
+  videoId?: number;
+  videoTitle?: string;
 }
 
 interface Chapter {
@@ -323,10 +346,25 @@ function parseBookContent(content: string): Chapter[] {
       currentChapter = { title, category, paragraphs: [], content: [] };
     } else if (currentChapter) {
       const photoRegex = /\[PHOTO:(\d+):([^\]]*)\]/g;
-      if (photoRegex.test(trimmed)) {
+      const videoQrRegex = /\[VIDEO_QR:(\d+):([^\]]*)\]/g;
+      if (videoQrRegex.test(trimmed)) {
+        videoQrRegex.lastIndex = 0;
+        const parts = trimmed.split(/\[VIDEO_QR:\d+:[^\]]*\]/);
+        const markers = Array.from(trimmed.matchAll(/\[VIDEO_QR:(\d+):([^\]]*)\]/g));
+        parts.forEach((part, idx) => {
+          const text = part.trim();
+          if (text) {
+            currentChapter!.paragraphs.push(text);
+            currentChapter!.content.push({ type: "text", text });
+          }
+          if (idx < markers.length) {
+            currentChapter!.content.push({ type: "video_qr", videoId: Number(markers[idx][1]), videoTitle: markers[idx][2] });
+          }
+        });
+      } else if (photoRegex.test(trimmed)) {
         photoRegex.lastIndex = 0;
         const parts = trimmed.split(/\[PHOTO:\d+:[^\]]*\]/);
-        const markers = [...trimmed.matchAll(/\[PHOTO:(\d+):([^\]]*)\]/g)];
+        const markers = Array.from(trimmed.matchAll(/\[PHOTO:(\d+):([^\]]*)\]/g));
         parts.forEach((part, idx) => {
           const text = part.trim();
           if (text) {

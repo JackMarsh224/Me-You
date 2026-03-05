@@ -10,6 +10,10 @@ import BookPreview from "@/pages/book-preview";
 import Checkout from "@/pages/checkout";
 import StoryLibrary from "@/pages/story-library";
 import About from "@/pages/about";
+import VideoViewer from "@/pages/video-viewer";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
+import MyLibrary from "@/pages/my-library";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,10 +22,14 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/library" component={StoryLibrary} />
       <Route path="/about" component={About} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/my-library" component={MyLibrary} />
       <Route path="/interview/:id" component={Interview} />
       <Route path="/book/:id/checkout" component={Checkout} />
       <Route path="/book/:id/preview" component={BookPreview} />
       <Route path="/book/:id" component={BookPreview} />
+      <Route path="/video/:id" component={VideoViewer} />
       <Route component={NotFound} />
     </Switch>
   );
