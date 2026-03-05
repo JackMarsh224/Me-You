@@ -8,6 +8,7 @@ import { MessageCircle, Camera, Package, ArrowRight, BookOpen } from "lucide-rea
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
+import heroBg from "@assets/u6741236396_make_an_artistic_marketing_image_of_legacy_and_st__1772704006312.png";
 
 export default function Landing() {
   const [, navigate] = useLocation();
@@ -65,6 +66,11 @@ export default function Landing() {
       </header>
 
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroBg})` }}
+        />
+        <div className="absolute inset-0 bg-background/80 dark:bg-background/85" />
         <div className="max-w-4xl mx-auto text-center relative">
           <img
             src={logoImage}
