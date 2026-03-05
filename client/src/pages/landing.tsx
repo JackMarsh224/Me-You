@@ -52,7 +52,7 @@ export default function Landing() {
     <div className="min-h-screen bg-background">
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
-          <img src={logoImage} alt="You & Me" className="h-8 object-contain" data-testid="img-logo" />
+          <img src={logoImage} alt="You & Me" className="h-8 object-contain mix-blend-multiply dark:mix-blend-screen dark:invert" data-testid="img-logo" />
           <nav className="flex items-center gap-1 sm:gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/library")} data-testid="button-nav-library">
               Story Library
