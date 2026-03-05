@@ -75,7 +75,7 @@ export default function Landing() {
           <img
             src={logoImage}
             alt="You & Me — A Life Story, Told"
-            className="mx-auto mb-8 h-24 sm:h-32 object-contain mix-blend-multiply dark:mix-blend-screen dark:invert"
+            className="mx-auto mb-8 h-40 sm:h-52 md:h-64 object-contain mix-blend-multiply dark:mix-blend-screen dark:invert"
             data-testid="img-hero-logo"
           />
           <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6" data-testid="text-hero-title">
