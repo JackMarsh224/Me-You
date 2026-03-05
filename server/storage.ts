@@ -16,6 +16,7 @@ export interface IStorage {
   getPhotos(bookId: number): Promise<Photo[]>;
   createPhoto(data: InsertPhoto): Promise<Photo>;
   deletePhoto(id: number): Promise<void>;
+  getSharedBooks(): Promise<Book[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -58,6 +59,12 @@ export class DatabaseStorage implements IStorage {
 
   async deletePhoto(id: number): Promise<void> {
     await db.delete(photos).where(eq(photos.id, id));
+  }
+
+  async getSharedBooks(): Promise<Book[]> {
+    return db.select().from(books)
+      .where(eq(books.shared, true))
+      .orderBy(desc(books.createdAt));
   }
 }
 

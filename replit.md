@@ -42,10 +42,14 @@ A personal book creation platform where users go through an AI-guided interview 
 - `client/src/pages/interview.tsx` - Interview chat page
 - `client/src/pages/checkout.tsx` - Checkout/payment page with book review and order
 - `client/src/pages/book-preview.tsx` - Book preview page (preview-only mode and paid full mode)
-- `client/src/App.tsx` - Routes: /, /interview/:id, /book/:id/checkout, /book/:id/preview, /book/:id
+- `client/src/pages/story-library.tsx` - Story Library page (shared public books)
+- `client/src/pages/about.tsx` - About Us page
+- `client/src/App.tsx` - Routes: /, /library, /about, /interview/:id, /book/:id/checkout, /book/:id/preview, /book/:id
 
 ## API Endpoints
 - POST /api/books - Create new book
+- GET /api/shared-books - Get publicly shared books
+- POST /api/books/:id/share - Toggle book sharing
 - GET /api/books/:id - Get book details
 - GET /api/books/:id/messages - Get interview messages
 - POST /api/books/:id/chat - Send message (SSE streaming)

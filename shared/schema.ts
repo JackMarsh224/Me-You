@@ -14,6 +14,7 @@ export const books = pgTable("books", {
   generatedContent: text("generated_content"),
   coverColor: text("cover_color").default("#1a1a2e"),
   paid: boolean("paid").default(false).notNull(),
+  shared: boolean("shared").default(false).notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 

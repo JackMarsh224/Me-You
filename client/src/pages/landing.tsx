@@ -53,15 +53,22 @@ export default function Landing() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <img src={logoImage} alt="You & Me" className="h-8 object-contain" data-testid="img-logo" />
-          <div className="flex items-center gap-2">
+          <nav className="flex items-center gap-1 sm:gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/library")} data-testid="button-nav-library">
+              Story Library
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/about")} data-testid="button-nav-about">
+              About Us
+            </Button>
             <ThemeToggle />
             <Button
+              size="sm"
               onClick={() => setShowStart(true)}
               data-testid="button-start-header"
             >
               Start Your Book
             </Button>
-          </div>
+          </nav>
         </div>
       </header>
 

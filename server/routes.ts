@@ -62,6 +62,26 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/shared-books", async (req, res) => {
+    try {
+      const sharedBooks = await storage.getSharedBooks();
+      res.json(sharedBooks);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch shared books" });
+    }
+  });
+
+  app.post("/api/books/:id/share", async (req, res) => {
+    try {
+      const book = await storage.getBook(Number(req.params.id));
+      if (!book) return res.status(404).json({ error: "Book not found" });
+      const updated = await storage.updateBook(book.id, { shared: !book.shared });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update sharing" });
+    }
+  });
+
   app.get("/api/books/:id", async (req, res) => {
     try {
       const book = await storage.getBook(Number(req.params.id));
