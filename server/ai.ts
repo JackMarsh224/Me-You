@@ -50,21 +50,20 @@ export async function getInitialQuestion(authorName: string): Promise<string> {
       { role: "system", content: SYSTEM_PROMPT },
       {
         role: "user",
-        content: `The person's name is ${authorName}. Write a warm, welcoming introduction message that:
-1. Explains the purpose of "You & Me" — this is a guided interview that will capture their life story, beliefs, wisdom, and predictions, and turn it all into a beautifully written book in their own voice.
-2. Briefly outlines what they can expect — you'll walk them through 7 topics: their early life & childhood, family & relationships, career & achievements, core beliefs & values, life lessons & wisdom, predictions for the future, and their legacy & final words.
-3. Mentions that you'll be paying attention to HOW they speak so the final book sounds authentically like them — they should just be themselves.
-4. Let them know they can upload photos for each section that will be woven into the final book.
-5. Keep it warm, encouraging, and conversational — not robotic or like a list of instructions.
-6. End the message with something like: "Whenever you're ready to begin, just say the word!"
+        content: `The person's name is ${authorName}. Write a SHORT, warm intro — 2-3 sentences max. Keep it casual and direct. Tell them:
+- We'll have a conversation covering their life story across a few topics
+- It'll become a real printed book written in their own voice
+- They can upload photos along the way
 
-Do NOT ask any interview questions yet. This is purely an introduction and overview. The interview starts after they say they're ready.`,
+End with one short line inviting them to begin when ready. No lists, no bold headers, no long explanation. Sound like a real person, not an onboarding guide.
+
+Do NOT ask any interview questions yet.`,
       },
     ],
-    max_completion_tokens: 768,
+    max_completion_tokens: 200,
   });
 
-  return response.choices[0]?.message?.content || `Welcome, ${authorName}! I'm so glad you're here.\n\nYou & Me is all about capturing your life story — your memories, the people who shaped you, the things you believe in, the wisdom you've earned, and the legacy you want to leave behind. Together, we'll turn all of that into a beautiful book written in your own words and your own voice.\n\nHere's how it works: I'll walk you through seven topics — your early life, family, career, beliefs, life lessons, predictions for the future, and your legacy. For each section, you're welcome to upload photos from that era of your life, and they'll be woven right into the final book.\n\nI'll be paying close attention to how you express yourself — your turns of phrase, your humor, your way of telling a story — so that when you read the finished book, it sounds exactly like you. So just be yourself.\n\nWhenever you're ready to begin, just say the word!`;
+  return response.choices[0]?.message?.content || `Hi ${authorName} — we're going to have a real conversation about your life, and turn it into a printed book written in your own voice. We'll cover a handful of topics, and you can upload photos along the way to bring it to life.\n\nWhenever you're ready, just say so.`;
 }
 
 export async function interviewChat(
