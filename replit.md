@@ -114,5 +114,5 @@ A personal book creation platform where users go through an AI-guided interview 
 - Preview plays when selecting a new voice
 
 ## TODO
-- Integrate Stripe payment processing (connector: ccfg_stripe_01K611P4YQR0SZM11XFRQJC44Y)
+- Integrate Stripe payment processing (set STRIPE_SECRET_KEY environment variable)
 - Replace placeholder payment endpoint with real Stripe checkout
