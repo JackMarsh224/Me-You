@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import heroBg from "@assets/u6741236396_make_an_artistic_marketing_image_of_lega
 
 export default function Landing() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const [authorName, setAuthorName] = useState("");
   const [showStart, setShowStart] = useState(false);
   const [nameError, setNameError] = useState(false);
@@ -28,6 +30,13 @@ export default function Landing() {
     },
     onSuccess: (book) => {
       navigate(`/interview/${book.id}`);
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Something went wrong",
+        description: err.message || "Could not start your book. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
