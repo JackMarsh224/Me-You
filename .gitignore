@@ -1,6 +1,41 @@
-node_modules
-dist
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment variables — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# Uploaded user files — stored locally, not in version control
+uploads/*
+!uploads/.gitkeep
+
+# OS / editor
 .DS_Store
-server/public
+Thumbs.db
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Vite
 vite.config.ts.*
+
+# Replit internals (not needed outside Replit)
+.replit
+.upm/
+.cache/
+.config/
+
+# Misc
+server/public
 *.tar.gz

@@ -34,13 +34,23 @@ declare global {
 }
 
 export function setupAuth(app: Express) {
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("SESSION_SECRET environment variable is required in production");
+    }
+    console.warn("Warning: SESSION_SECRET is not set. Using an insecure default — set it before deploying.");
+  }
+
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || "you-and-me-session-secret",
+      secret: sessionSecret || "dev-only-insecure-secret-do-not-deploy",
       resave: false,
       saveUninitialized: false,
       cookie: {
         maxAge: 30 * 24 * 60 * 60 * 1000,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "lax" : false,
       },
     })
   );

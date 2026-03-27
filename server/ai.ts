@@ -3,8 +3,8 @@ import type { Book, InterviewMessage, Photo, Video } from "@shared/schema";
 import { INTERVIEW_CATEGORIES } from "@shared/schema";
 
 const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || undefined,
 });
 
 const SYSTEM_PROMPT = `You are a deeply empathetic, thoughtful interviewer for "You & Me — A Life Story, Told." You are helping someone create a book that captures their life story, core beliefs, predictions for the future, and the wisdom they want to pass on.
