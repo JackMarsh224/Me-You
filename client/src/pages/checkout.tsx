@@ -15,7 +15,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { Book, Photo } from "@shared/schema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
 
 export default function Checkout() {
@@ -84,9 +84,21 @@ export default function Checkout() {
     );
   }
 
+  useEffect(() => {
+    if (book?.paid) {
+      navigate(`/book/${id}`);
+    }
+  }, [book?.paid, id, navigate]);
+
   if (book.paid) {
-    navigate(`/book/${id}`);
-    return null;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 mx-auto animate-spin text-muted-foreground" />
+          <p className="text-muted-foreground">Redirecting to your book...</p>
+        </div>
+      </div>
+    );
   }
 
   const wordCount = book.generatedContent.split(/\s+/).length;
@@ -128,16 +140,17 @@ export default function Checkout() {
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           <Card className="p-6" data-testid="card-book-summary">
             <div
-              className="w-full aspect-[3/4] rounded-md flex flex-col items-center justify-center p-6 mb-6 bg-foreground"
+              className="w-full aspect-[3/4] rounded-md flex flex-col items-center justify-center gap-6 p-6 mb-6 bg-foreground"
               data-testid="book-cover-preview"
             >
-              <img src={logoImage} alt="You & Me" className="h-12 object-contain mb-4 invert" />
+              <img
+                src={logoImage}
+                alt="You & Me"
+                className="w-40 object-contain mix-blend-screen"
+              />
               <h3 className="font-serif text-xl font-bold text-background text-center leading-tight">
-                {book.title}
+                {book.authorName}'s Story
               </h3>
-              <div className="mt-auto">
-                <p className="text-background/80 font-serif">{book.authorName}</p>
-              </div>
             </div>
             <Button
               variant="outline"
