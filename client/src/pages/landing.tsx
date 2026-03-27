@@ -14,6 +14,7 @@ export default function Landing() {
   const [, navigate] = useLocation();
   const [authorName, setAuthorName] = useState("");
   const [showStart, setShowStart] = useState(false);
+  const [nameError, setNameError] = useState(false);
 
   const { data: user } = useQuery<{ id: number; username: string } | null>({
     queryKey: ["/api/user"],
@@ -189,27 +190,36 @@ export default function Landing() {
           <p className="text-muted-foreground mb-8">
             Enter your name and start your journey. The AI will guide you through the entire process.
           </p>
-          <div className="flex gap-3">
-            <Input
-              placeholder="Your full name"
-              value={authorName}
-              onChange={(e) => setAuthorName(e.target.value)}
-              className="flex-1"
-              data-testid="input-author-name"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && authorName.trim()) {
-                  createBook.mutate(authorName.trim());
-                }
-              }}
-            />
-            <Button
-              onClick={() => authorName.trim() && createBook.mutate(authorName.trim())}
-              disabled={!authorName.trim() || createBook.isPending}
-              data-testid="button-start-book"
-            >
-              {createBook.isPending ? "Creating..." : "Start"}
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
+          <div className="space-y-2">
+            <div className="flex gap-3">
+              <Input
+                placeholder="Your full name"
+                value={authorName}
+                onChange={(e) => { setAuthorName(e.target.value); setNameError(false); }}
+                className={`flex-1 ${nameError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                data-testid="input-author-name"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    if (authorName.trim()) createBook.mutate(authorName.trim());
+                    else setNameError(true);
+                  }
+                }}
+              />
+              <Button
+                onClick={() => {
+                  if (authorName.trim()) createBook.mutate(authorName.trim());
+                  else setNameError(true);
+                }}
+                disabled={createBook.isPending}
+                data-testid="button-start-book"
+              >
+                {createBook.isPending ? "Creating..." : "Start"}
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+            {nameError && (
+              <p className="text-sm text-destructive">Please enter your name to get started.</p>
+            )}
           </div>
         </div>
       </section>
@@ -236,22 +246,32 @@ export default function Landing() {
               </p>
             </div>
             <div className="space-y-4">
-              <Input
-                placeholder="Your full name"
-                value={authorName}
-                onChange={(e) => setAuthorName(e.target.value)}
-                data-testid="input-author-name-modal"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && authorName.trim()) {
-                    createBook.mutate(authorName.trim());
-                  }
-                }}
-              />
+              <div className="space-y-1">
+                <Input
+                  placeholder="Your full name"
+                  value={authorName}
+                  onChange={(e) => { setAuthorName(e.target.value); setNameError(false); }}
+                  className={nameError ? "border-destructive focus-visible:ring-destructive" : ""}
+                  data-testid="input-author-name-modal"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (authorName.trim()) createBook.mutate(authorName.trim());
+                      else setNameError(true);
+                    }
+                  }}
+                />
+                {nameError && (
+                  <p className="text-sm text-destructive">Please enter your name to continue.</p>
+                )}
+              </div>
               <Button
                 className="w-full"
-                onClick={() => authorName.trim() && createBook.mutate(authorName.trim())}
-                disabled={!authorName.trim() || createBook.isPending}
+                onClick={() => {
+                  if (authorName.trim()) createBook.mutate(authorName.trim());
+                  else setNameError(true);
+                }}
+                disabled={createBook.isPending}
                 data-testid="button-start-modal"
               >
                 {createBook.isPending ? "Creating your book..." : "Start Interview"}
