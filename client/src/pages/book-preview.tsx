@@ -156,19 +156,17 @@ export default function BookPreview() {
       <div className="max-w-3xl mx-auto px-4 py-12">
         <div className="text-center mb-16">
           <div
-            className="w-full max-w-sm mx-auto aspect-[3/4] rounded-md flex flex-col items-center justify-center p-8 mb-8 bg-foreground"
+            className="w-full max-w-sm mx-auto aspect-[3/4] rounded-md flex flex-col items-center justify-center gap-8 p-8 mb-8 bg-foreground"
             data-testid="book-cover"
           >
-            <img src={logoImage} alt="You & Me" className="h-16 object-contain mb-6 invert" />
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-background text-center leading-tight">
-              {book.title}
+            <img
+              src={logoImage}
+              alt="You & Me"
+              className="w-64 object-contain mix-blend-screen"
+            />
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-background text-center leading-tight">
+              {book.authorName}'s Story
             </h2>
-            {book.subtitle && (
-              <p className="text-background/70 mt-3 text-sm text-center">{book.subtitle}</p>
-            )}
-            <div className="mt-auto">
-              <p className="text-background/80 font-serif text-lg">{book.authorName}</p>
-            </div>
           </div>
         </div>
 
