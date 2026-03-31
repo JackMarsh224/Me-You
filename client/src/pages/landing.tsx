@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { MessageCircle, Camera, Package, ArrowRight, BookOpen, User, Library, Check, Quote } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
-import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
+import logoImage from "@assets/logo_transparent.png";
 import heroBg from "@assets/u6741236396_make_an_artistic_marketing_image_of_legacy_and_st__1772704006312.png";
 
 export default function Landing() {
@@ -114,7 +114,7 @@ export default function Landing() {
           <img
             src={logoImage}
             alt="You & Me"
-            className="h-8 object-contain mix-blend-multiply dark:mix-blend-screen dark:invert"
+            className="h-8 object-contain invert dark:invert-0"
             data-testid="img-logo"
           />
           <nav className="flex items-center gap-1 sm:gap-2">
@@ -166,7 +166,7 @@ export default function Landing() {
           <img
             src={logoImage}
             alt="You & Me — A Life Story, Told"
-            className="mx-auto mb-6 h-24 sm:h-32 object-contain invert"
+            className="mx-auto mb-6 h-24 sm:h-32 object-contain"
             data-testid="img-hero-logo"
           />
           <h1
@@ -415,7 +415,7 @@ export default function Landing() {
         <img
           src={logoImage}
           alt="You & Me"
-          className="h-6 mx-auto object-contain mb-3 mix-blend-multiply dark:mix-blend-screen dark:invert"
+          className="h-6 mx-auto object-contain mb-3 invert dark:invert-0"
         />
         <p className="mb-1">Your life deserves to be remembered.</p>
         <p className="text-xs text-muted-foreground/60">© {new Date().getFullYear()} You &amp; Me. All rights reserved.</p>
@@ -435,7 +435,7 @@ export default function Landing() {
               <img
                 src={logoImage}
                 alt="You & Me"
-                className="h-12 mx-auto object-contain mb-3 mix-blend-multiply dark:mix-blend-screen dark:invert"
+                className="h-12 mx-auto object-contain mb-3 invert dark:invert-0"
               />
               <h3 className="font-serif text-2xl font-bold">Begin Your Book</h3>
               <p className="text-sm text-muted-foreground mt-2">

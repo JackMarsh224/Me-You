@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import type { Book, Photo } from "@shared/schema";
 import { useState } from "react";
-import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
+import logoImage from "@assets/logo_transparent.png";
 
 export default function BookPreview() {
   const { id } = useParams<{ id: string }>();
@@ -76,7 +76,7 @@ export default function BookPreview() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="p-8 text-center max-w-md">
-          <img src={logoImage} alt="You & Me" className="h-10 mx-auto object-contain mb-4" />
+          <img src={logoImage} alt="You & Me" className="h-10 mx-auto object-contain mb-4 invert dark:invert-0" />
           <h2 className="font-serif text-xl font-bold mb-2">Book Not Ready Yet</h2>
           <p className="text-muted-foreground mb-6">
             Complete your interview and generate the book first.
@@ -162,7 +162,7 @@ export default function BookPreview() {
             <img
               src={logoImage}
               alt="You & Me"
-              className="w-64 object-contain mix-blend-screen"
+              className="w-64 object-contain"
             />
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-background text-center leading-tight">
               {book.authorName}'s Story
@@ -274,7 +274,7 @@ export default function BookPreview() {
         </div>
 
         <div className="mt-20 text-center py-12 border-t">
-          <img src={logoImage} alt="You & Me" className="h-8 mx-auto object-contain mb-4" />
+          <img src={logoImage} alt="You & Me" className="h-8 mx-auto object-contain mb-4 invert dark:invert-0" />
           <p className="font-serif text-lg italic text-muted-foreground">
             The End
           </p>

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
-import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
+import logoImage from "@assets/logo_transparent.png";
 
 interface VideoMeta {
   id: number;
@@ -39,7 +39,7 @@ export default function VideoViewer() {
             <img
               src={logoImage}
               alt="You & Me"
-              className="h-8 object-contain cursor-pointer mix-blend-multiply dark:mix-blend-screen dark:invert"
+              className="h-8 object-contain cursor-pointer invert dark:invert-0"
               data-testid="img-logo"
             />
           </Link>
@@ -105,7 +105,7 @@ export default function VideoViewer() {
         <img
           src={logoImage}
           alt="You & Me"
-          className="h-6 mx-auto object-contain mb-2 mix-blend-multiply dark:mix-blend-screen dark:invert"
+          className="h-6 mx-auto object-contain mb-2 invert dark:invert-0"
         />
         <p>Your life deserves to be remembered.</p>
       </footer>

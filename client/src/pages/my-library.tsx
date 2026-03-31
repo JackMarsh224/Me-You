@@ -10,7 +10,7 @@ import { BookOpen, Download, Video, QrCode, LogOut, Play, PenLine } from "lucide
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getQueryFn } from "@/lib/queryClient";
 import type { Book, Video as VideoType, User } from "@shared/schema";
-import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
+import logoImage from "@assets/logo_transparent.png";
 
 export default function MyLibrary() {
   const [, navigate] = useLocation();
@@ -105,7 +105,7 @@ export default function MyLibrary() {
             <img
               src={logoImage}
               alt="You & Me"
-              className="h-8 object-contain cursor-pointer mix-blend-multiply dark:mix-blend-screen dark:invert"
+              className="h-8 object-contain cursor-pointer invert dark:invert-0"
               data-testid="img-logo"
             />
           </Link>
@@ -242,7 +242,7 @@ export default function MyLibrary() {
       </main>
 
       <footer className="border-t py-8 px-4 text-center text-sm text-muted-foreground">
-        <img src={logoImage} alt="You & Me" className="h-6 mx-auto object-contain mb-2 mix-blend-multiply dark:mix-blend-screen dark:invert" />
+        <img src={logoImage} alt="You & Me" className="h-6 mx-auto object-contain mb-2 invert dark:invert-0" />
         <p>Your life deserves to be remembered.</p>
       </footer>
     </div>

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
+import logoImage from "@assets/logo_transparent.png";
 
 export default function Login() {
   const [, navigate] = useLocation();
@@ -34,7 +34,7 @@ export default function Login() {
             <img
               src={logoImage}
               alt="You & Me"
-              className="h-8 object-contain cursor-pointer mix-blend-multiply dark:mix-blend-screen dark:invert"
+              className="h-8 object-contain cursor-pointer invert dark:invert-0"
               data-testid="img-logo"
             />
           </Link>

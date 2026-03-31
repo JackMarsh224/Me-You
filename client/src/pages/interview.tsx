@@ -34,7 +34,7 @@ import {
 import { Input } from "@/components/ui/input";
 import type { Book, InterviewMessage, Photo, InterviewCategory } from "@shared/schema";
 import { INTERVIEW_CATEGORIES } from "@shared/schema";
-import logoImage from "@assets/Screenshot_2025-05-12_at_16.42.36_1771496833828.png";
+import logoImage from "@assets/logo_transparent.png";
 
 const SpeechRecognitionAPI =
   typeof window !== "undefined"
@@ -575,7 +575,7 @@ export default function Interview() {
                 >
                   {msg.role === "assistant" && (
                     <div className="flex items-center justify-between gap-1.5 mb-1.5">
-                      <img src={logoImage} alt="" className="h-3.5 object-contain" />
+                      <img src={logoImage} alt="" className="h-3.5 object-contain invert dark:invert-0" />
                       <button
                         onClick={() => handleSpeak(msg.content, msg.id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
@@ -600,7 +600,7 @@ export default function Interview() {
             <div className="flex justify-start">
               <div className="max-w-[85%] sm:max-w-[75%] rounded-md px-4 py-3 bg-card border">
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <img src={logoImage} alt="" className="h-3.5 object-contain" />
+                  <img src={logoImage} alt="" className="h-3.5 object-contain invert dark:invert-0" />
                 </div>
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{streamedContent}</p>
               </div>
