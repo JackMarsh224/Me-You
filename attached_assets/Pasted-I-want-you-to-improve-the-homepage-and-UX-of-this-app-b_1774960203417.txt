@@ -1,0 +1,95 @@
+I want you to improve the homepage and UX of this app based on the following feedback.
+
+IMPORTANT:
+
+* Do NOT break or change any existing functionality, routes, backend logic, or database behavior
+* Do NOT remove any working features
+* Only improve UI, copy, structure, and clarity
+
+Make the following improvements:
+
+## 1. Hero section improvements
+
+* Improve contrast so text is easier to read against the background
+* Reduce the “washed out” feel of the background image
+* Strengthen visual hierarchy:
+
+  * Make the main headline the most prominent element
+  * Reduce emphasis on the logo slightly
+  * Tighten spacing between elements
+* Make the CTA button stand out more visually
+
+## 2. Clearer value proposition
+
+* Add one strong, clear sentence that explains exactly what the product does
+* Make it immediately obvious:
+
+  * who this is for (yourself vs a loved one)
+  * what the outcome is (a finished book, memory, etc.)
+
+## 3. Improve CTA clarity
+
+* Replace or enhance “Begin Your Story” with something more explicit, such as:
+
+  * “Start Your Interview”
+  * “Create Your Life Story Book”
+* Keep tone aligned with the brand, but make the action clearer
+
+## 4. Add a “How It Works” section
+
+Below the hero, add a simple 3-step section:
+
+1. Answer guided questions
+2. AI shapes your story in your voice
+3. Receive a beautifully formatted book
+
+Keep it visually clean and consistent with the current design.
+
+## 5. Add trust and proof elements
+
+Add a section that helps users trust the product:
+
+* Example output (mock or placeholder if needed)
+* A short explanation of what the final book includes
+* Optional placeholder testimonials or “who this is for”
+
+## 6. Improve navigation
+
+Enhance the navbar slightly by adding one of:
+
+* “How It Works”
+* “Examples”
+  Do not remove existing links.
+
+## 7. Strengthen emotional pull
+
+Adjust copy slightly to better emphasize:
+
+* preserving memories
+* capturing stories before they are lost
+* creating something meaningful for family
+
+Keep tone elegant and premium — do not make it overly salesy.
+
+## 8. Maintain design consistency
+
+* Keep the monochrome / premium aesthetic
+* Do not drastically change branding
+* Improve spacing, alignment, and readability
+
+## 9. Do NOT change functionality
+
+* Do not modify routes
+* Do not change API calls
+* Do not change database logic
+* Do not break any existing flows
+
+## 10. Final output
+
+At the end, show:
+
+* what UI changes were made
+* what copy was updated
+* confirmation that functionality is unchanged
+
+Focus on making the homepage clearer, more compelling, and more trustworthy without altering how the app works.
