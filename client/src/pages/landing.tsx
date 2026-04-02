@@ -114,7 +114,7 @@ export default function Landing() {
           <img
             src={logoImage}
             alt="You & Me"
-            className="h-8 object-contain invert dark:invert-0"
+            className="h-8 object-contain dark:invert"
             data-testid="img-logo"
           />
           <nav className="flex items-center gap-1 sm:gap-2">
@@ -166,7 +166,7 @@ export default function Landing() {
           <img
             src={logoImage}
             alt="You & Me — A Life Story, Told"
-            className="mx-auto mb-6 h-24 sm:h-32 object-contain"
+            className="mx-auto mb-6 h-24 sm:h-32 object-contain invert"
             data-testid="img-hero-logo"
           />
           <h1
@@ -415,7 +415,7 @@ export default function Landing() {
         <img
           src={logoImage}
           alt="You & Me"
-          className="h-6 mx-auto object-contain mb-3 invert dark:invert-0"
+          className="h-6 mx-auto object-contain mb-3 dark:invert"
         />
         <p className="mb-1">Your life deserves to be remembered.</p>
         <p className="text-xs text-muted-foreground/60">© {new Date().getFullYear()} You &amp; Me. All rights reserved.</p>
@@ -435,7 +435,7 @@ export default function Landing() {
               <img
                 src={logoImage}
                 alt="You & Me"
-                className="h-12 mx-auto object-contain mb-3 invert dark:invert-0"
+                className="h-12 mx-auto object-contain mb-3 dark:invert"
               />
               <h3 className="font-serif text-2xl font-bold">Begin Your Book</h3>
               <p className="text-sm text-muted-foreground mt-2">

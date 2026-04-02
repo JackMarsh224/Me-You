@@ -71,7 +71,7 @@ export default function Checkout() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="p-8 text-center max-w-md">
-          <img src={logoImage} alt="You & Me" className="h-10 mx-auto object-contain mb-4 invert dark:invert-0" />
+          <img src={logoImage} alt="You & Me" className="h-10 mx-auto object-contain mb-4 dark:invert" />
           <h2 className="font-serif text-xl font-bold mb-2">Book Not Ready Yet</h2>
           <p className="text-muted-foreground mb-6">
             Complete your interview and generate the book first.
@@ -118,7 +118,7 @@ export default function Checkout() {
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <img src={logoImage} alt="You & Me" className="h-6 object-contain invert dark:invert-0" />
+            <img src={logoImage} alt="You & Me" className="h-6 object-contain dark:invert" />
           </div>
           <ThemeToggle />
         </div>
@@ -146,7 +146,7 @@ export default function Checkout() {
               <img
                 src={logoImage}
                 alt="You & Me"
-                className="w-40 object-contain"
+                className="w-40 object-contain invert"
               />
               <h3 className="font-serif text-xl font-bold text-background text-center leading-tight">
                 {book.authorName}'s Story

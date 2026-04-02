@@ -39,7 +39,7 @@ export default function VideoViewer() {
             <img
               src={logoImage}
               alt="You & Me"
-              className="h-8 object-contain cursor-pointer invert dark:invert-0"
+              className="h-8 object-contain cursor-pointer dark:invert"
               data-testid="img-logo"
             />
           </Link>
@@ -105,7 +105,7 @@ export default function VideoViewer() {
         <img
           src={logoImage}
           alt="You & Me"
-          className="h-6 mx-auto object-contain mb-2 invert dark:invert-0"
+          className="h-6 mx-auto object-contain mb-2 dark:invert"
         />
         <p>Your life deserves to be remembered.</p>
       </footer>

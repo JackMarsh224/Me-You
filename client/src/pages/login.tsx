@@ -34,7 +34,7 @@ export default function Login() {
             <img
               src={logoImage}
               alt="You & Me"
-              className="h-8 object-contain cursor-pointer invert dark:invert-0"
+              className="h-8 object-contain cursor-pointer dark:invert"
               data-testid="img-logo"
             />
           </Link>

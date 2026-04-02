@@ -575,7 +575,7 @@ export default function Interview() {
                 >
                   {msg.role === "assistant" && (
                     <div className="flex items-center justify-between gap-1.5 mb-1.5">
-                      <img src={logoImage} alt="" className="h-3.5 object-contain invert dark:invert-0" />
+                      <img src={logoImage} alt="" className="h-3.5 object-contain dark:invert" />
                       <button
                         onClick={() => handleSpeak(msg.content, msg.id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
@@ -600,7 +600,7 @@ export default function Interview() {
             <div className="flex justify-start">
               <div className="max-w-[85%] sm:max-w-[75%] rounded-md px-4 py-3 bg-card border">
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <img src={logoImage} alt="" className="h-3.5 object-contain invert dark:invert-0" />
+                  <img src={logoImage} alt="" className="h-3.5 object-contain dark:invert" />
                 </div>
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{streamedContent}</p>
               </div>
