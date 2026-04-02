@@ -28,8 +28,25 @@ declare global {
       id: number;
       username: string;
       password: string;
+      isAdmin: boolean;
       createdAt: Date;
     }
+  }
+}
+
+export async function seedAdminUser() {
+  try {
+    const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+    const existing = await storage.getUserByUsername("admin");
+    if (!existing) {
+      const hashed = await hashPassword(adminPassword);
+      await storage.createUser({ username: "admin", password: hashed, isAdmin: true });
+      console.log("[auth] Admin user created (username: admin)");
+    } else if (!existing.isAdmin) {
+      console.log("[auth] Admin user exists but isAdmin=false — update manually if needed");
+    }
+  } catch (err) {
+    console.error("[auth] Failed to seed admin user:", err);
   }
 }
 
@@ -130,6 +147,6 @@ export function setupAuth(app: Express) {
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
     const user = req.user!;
-    res.json({ id: user.id, username: user.username });
+    res.json({ id: user.id, username: user.username, isAdmin: user.isAdmin });
   });
 }

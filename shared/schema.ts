@@ -7,6 +7,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
@@ -23,6 +24,12 @@ export const books = pgTable("books", {
   coverColor: text("cover_color").default("#1a1a2e"),
   paid: boolean("paid").default(false).notNull(),
   shared: boolean("shared").default(false).notNull(),
+  customerEmail: text("customer_email"),
+  deliveryName: text("delivery_name"),
+  deliveryAddress: text("delivery_address"),
+  deliveryCity: text("delivery_city"),
+  deliveryPostcode: text("delivery_postcode"),
+  deliveryCountry: text("delivery_country"),
   approvedAt: timestamp("approved_at"),
   emailSentAt: timestamp("email_sent_at"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),

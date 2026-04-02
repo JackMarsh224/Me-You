@@ -373,7 +373,7 @@ export default function Interview() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/books", id] });
-      navigate(`/book/${id}/checkout`);
+      navigate(`/book/${id}`);
     },
   });
 
@@ -510,11 +510,11 @@ export default function Interview() {
               )}
               {book.status === "completed" && (
                 <Button
-                  onClick={() => navigate(book.paid ? `/book/${id}` : `/book/${id}/checkout`)}
+                  onClick={() => navigate(`/book/${id}`)}
                   data-testid="button-view-book"
                 >
                   <BookOpen className="w-4 h-4 mr-1" />
-                  {book.paid ? "View Book" : "Review & Order"}
+                  View &amp; Approve Book
                 </Button>
               )}
               <ThemeToggle />

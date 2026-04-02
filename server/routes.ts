@@ -57,16 +57,26 @@ export async function registerRoutes(
 ): Promise<Server> {
   app.post("/api/books", async (req, res) => {
     try {
-      const { authorName } = req.body;
+      const { authorName, paid, customerEmail, deliveryName, deliveryAddress, deliveryCity, deliveryPostcode, deliveryCountry } = req.body;
       if (!authorName || typeof authorName !== "string") {
         return res.status(400).json({ error: "Author name is required" });
+      }
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "You must be logged in to create a book" });
       }
       const book = await storage.createBook({
         authorName: authorName.trim(),
         title: `${authorName.trim()}'s Story`,
         status: "interviewing",
         currentCategory: "early_life",
-        userId: req.isAuthenticated() ? req.user!.id : null,
+        userId: req.user!.id,
+        paid: paid === true,
+        customerEmail: customerEmail || null,
+        deliveryName: deliveryName || null,
+        deliveryAddress: deliveryAddress || null,
+        deliveryCity: deliveryCity || null,
+        deliveryPostcode: deliveryPostcode || null,
+        deliveryCountry: deliveryCountry || null,
       });
 
       const initialQ = await getInitialQuestion(authorName.trim());
@@ -427,6 +437,18 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error approving book:", error);
       res.status(500).json({ error: "Failed to approve book" });
+    }
+  });
+
+  app.get("/api/admin/orders", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user!.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const allBooks = await storage.getAllBooks();
+      res.json(allBooks);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch orders" });
     }
   });
 

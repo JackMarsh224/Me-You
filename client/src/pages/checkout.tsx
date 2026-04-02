@@ -200,7 +200,7 @@ export default function Checkout() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-serif font-bold text-lg">Order Your Book</h3>
                 <div className="text-right">
-                  <p className="text-2xl font-bold">$49.99</p>
+                  <p className="text-2xl font-bold">£49.99</p>
                   <p className="text-xs text-muted-foreground">includes shipping</p>
                 </div>
               </div>

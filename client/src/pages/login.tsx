@@ -12,12 +12,16 @@ export default function Login() {
   const [, navigate] = useLocation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const params = new URLSearchParams(window.location.search);
+  const nextPath = params.get("next") || "/my-library";
+  const nameParam = params.get("name");
+  const redirectUrl = nameParam ? `${nextPath}?name=${encodeURIComponent(nameParam)}` : nextPath;
 
   const loginMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/login", { username, password }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      navigate("/my-library");
+      navigate(redirectUrl);
     },
   });
 
@@ -88,7 +92,7 @@ export default function Login() {
               <p className="text-center text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link
-                  href="/register"
+                  href={`/register${window.location.search}`}
                   className="text-foreground underline underline-offset-4"
                   data-testid="link-register"
                 >

@@ -13,6 +13,10 @@ export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const params = new URLSearchParams(window.location.search);
+  const nextPath = params.get("next") || "/my-library";
+  const nameParam = params.get("name");
+  const redirectUrl = nameParam ? `${nextPath}?name=${encodeURIComponent(nameParam)}` : nextPath;
 
   const registerMutation = useMutation({
     mutationFn: async () => {
@@ -21,7 +25,7 @@ export default function Register() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      navigate("/my-library");
+      navigate(redirectUrl);
     },
     onError: (err: Error) => {
       const message = err.message.replace(/^\d+:\s*/, "");

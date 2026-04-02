@@ -1,44 +1,33 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MessageCircle, Camera, Package, ArrowRight, BookOpen, User, Library, Check, Quote } from "lucide-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 import logoImage from "@assets/logo_transparent.png";
 import heroBg from "@assets/u6741236396_make_an_artistic_marketing_image_of_legacy_and_st__1772704006312.png";
 
 export default function Landing() {
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   const [authorName, setAuthorName] = useState("");
   const [showStart, setShowStart] = useState(false);
   const [nameError, setNameError] = useState(false);
 
-  const { data: user } = useQuery<{ id: number; username: string } | null>({
+  const { data: user } = useQuery<{ id: number; username: string; isAdmin?: boolean } | null>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
-  const createBook = useMutation({
-    mutationFn: async (name: string) => {
-      const res = await apiRequest("POST", "/api/books", { authorName: name });
-      return res.json();
-    },
-    onSuccess: (book) => {
-      navigate(`/interview/${book.id}`);
-    },
-    onError: (err: Error) => {
-      toast({
-        title: "Something went wrong",
-        description: err.message || "Could not start your book. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  const handleBegin = (name: string) => {
+    if (user) {
+      navigate(`/order?name=${encodeURIComponent(name)}`);
+    } else {
+      navigate(`/login?next=/order&name=${encodeURIComponent(name)}`);
+    }
+  };
 
   const steps = [
     {
@@ -132,6 +121,11 @@ export default function Landing() {
             <Button variant="ghost" size="sm" onClick={() => navigate("/about")} data-testid="button-nav-about">
               About Us
             </Button>
+            {user?.isAdmin && (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} data-testid="button-nav-admin">
+                Admin
+              </Button>
+            )}
             {user ? (
               <Button variant="ghost" size="sm" onClick={() => navigate("/my-library")} data-testid="button-nav-my-library">
                 <Library className="w-4 h-4 mr-1" />
@@ -386,20 +380,19 @@ export default function Landing() {
                 data-testid="input-author-name"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    if (authorName.trim()) createBook.mutate(authorName.trim());
+                    if (authorName.trim()) handleBegin(authorName.trim());
                     else setNameError(true);
                   }
                 }}
               />
               <Button
                 onClick={() => {
-                  if (authorName.trim()) createBook.mutate(authorName.trim());
+                  if (authorName.trim()) handleBegin(authorName.trim());
                   else setNameError(true);
                 }}
-                disabled={createBook.isPending}
                 data-testid="button-start-book"
               >
-                {createBook.isPending ? "Creating..." : "Start"}
+                Start
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
@@ -407,7 +400,7 @@ export default function Landing() {
               <p className="text-sm text-destructive">Please enter your name to get started.</p>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-4">$49.99 — printed &amp; shipped. No subscription.</p>
+          <p className="text-xs text-muted-foreground mt-4">£49.99 — printed &amp; shipped. No subscription.</p>
         </div>
       </section>
 
@@ -454,7 +447,7 @@ export default function Landing() {
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      if (authorName.trim()) createBook.mutate(authorName.trim());
+                      if (authorName.trim()) handleBegin(authorName.trim());
                       else setNameError(true);
                     }
                   }}
@@ -467,17 +460,16 @@ export default function Landing() {
                 className="w-full"
                 size="lg"
                 onClick={() => {
-                  if (authorName.trim()) createBook.mutate(authorName.trim());
+                  if (authorName.trim()) handleBegin(authorName.trim());
                   else setNameError(true);
                 }}
-                disabled={createBook.isPending}
                 data-testid="button-start-modal"
               >
-                {createBook.isPending ? "Creating your book..." : "Start My Interview"}
+                Continue to Order
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
               <p className="text-xs text-center text-muted-foreground">
-                $49.99 for the finished printed book. No charge until you're happy with the result.
+                £49.99 — printed &amp; shipped to your door.
               </p>
             </div>
           </Card>

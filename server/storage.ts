@@ -13,6 +13,7 @@ export interface IStorage {
   createUser(data: InsertUser): Promise<User>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserById(id: number): Promise<User | undefined>;
+  getAllBooks(): Promise<Book[]>;
   createBook(data: InsertBook): Promise<Book>;
   getBook(id: number): Promise<Book | undefined>;
   updateBook(id: number, data: Partial<InsertBook>): Promise<Book>;
@@ -118,6 +119,10 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(videos)
       .where(eq(videos.userId, userId))
       .orderBy(desc(videos.createdAt));
+  }
+
+  async getAllBooks(): Promise<Book[]> {
+    return db.select().from(books).orderBy(desc(books.createdAt));
   }
 }
 

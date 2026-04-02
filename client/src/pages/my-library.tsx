@@ -80,9 +80,10 @@ export default function MyLibrary() {
     }
     if (book.status === "completed") {
       return (
-        <Link href={`/book/${book.id}/checkout`}>
-          <Button variant="default" size="sm" data-testid={`button-checkout-book-${book.id}`}>
-            Complete Purchase
+        <Link href={`/book/${book.id}`}>
+          <Button variant="default" size="sm" data-testid={`button-view-book-${book.id}`}>
+            <BookOpen className="w-4 h-4 mr-1" />
+            View &amp; Approve
           </Button>
         </Link>
       );
