@@ -254,6 +254,9 @@ export default function BookPreview() {
 
         <div className="space-y-16">
           {chapters.map((chapter, i) => {
+            // In preview mode, only show the first chapter
+            if (isPreviewOnly && i > 0) return null;
+
             const photoMap = new Map(photos.map((p) => [p.id, p]));
             const usedPhotoIds = new Set(
               chapter.content.filter((c) => c.type === "photo").map((c) => c.photoId)
@@ -346,15 +349,58 @@ export default function BookPreview() {
           })}
         </div>
 
-        <div className="mt-20 text-center py-12 border-t">
-          <img src={logoImage} alt="You & Me" className="h-8 mx-auto object-contain mb-4 dark:invert" />
-          <p className="font-serif text-lg italic text-muted-foreground">
-            The End
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            A life story by {book.authorName}
-          </p>
-        </div>
+        {/* Paywall — preview mode only */}
+        {isPreviewOnly && chapters.length > 1 && (
+          <div className="mt-16 relative" data-testid="paywall-section">
+            {/* Blurred teaser of next chapter */}
+            <div className="select-none pointer-events-none blur-sm opacity-60 space-y-4 mb-0">
+              <p className="text-sm text-muted-foreground font-mono font-bold">
+                Chapter 02
+              </p>
+              <h3 className="font-serif text-2xl font-bold">{chapters[1]?.title}</h3>
+              {chapters[1]?.content.slice(0, 3).map((item, i) =>
+                item.type === "text" ? (
+                  <p key={i} className="font-serif text-foreground/90 leading-relaxed">{item.text}</p>
+                ) : null
+              )}
+            </div>
+
+            {/* Lock overlay */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-full bg-gradient-to-t from-background via-background/95 to-transparent absolute inset-0" />
+              <div className="relative z-10 text-center px-6 py-12">
+                <img src={logoImage} alt="You & Me" className="h-10 mx-auto object-contain mb-4 dark:invert" />
+                <h3 className="font-serif text-2xl sm:text-3xl font-bold mb-3">
+                  {book.authorName}'s story continues…
+                </h3>
+                <p className="text-muted-foreground mb-2 max-w-sm mx-auto">
+                  Your complete book has {chapters.length} chapters. Order your printed copy to read every word — and hold it in your hands.
+                </p>
+                <p className="font-semibold text-lg mb-6">$49.99 — shipped to your door</p>
+                <Button
+                  size="lg"
+                  onClick={() => navigate(`/book/${id}/checkout`)}
+                  data-testid="button-paywall-order"
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Order Your Complete Book
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!isPreviewOnly && (
+          <div className="mt-20 text-center py-12 border-t">
+            <img src={logoImage} alt="You & Me" className="h-8 mx-auto object-contain mb-4 dark:invert" />
+            <p className="font-serif text-lg italic text-muted-foreground">
+              The End
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              A life story by {book.authorName}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
