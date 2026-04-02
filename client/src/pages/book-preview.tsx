@@ -1,5 +1,5 @@
 import { useParams, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,16 +10,22 @@ import {
   MessageCircle,
   Loader2,
   CreditCard,
+  CheckCircle,
+  PackageCheck,
 } from "lucide-react";
 import type { Book, Photo } from "@shared/schema";
 import { useState } from "react";
 import logoImage from "@assets/logo_transparent.png";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function BookPreview() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const [downloading, setDownloading] = useState(false);
+  const [approveConfirmed, setApproveConfirmed] = useState(false);
   const isPreviewOnly = window.location.pathname.endsWith("/preview");
+  const { toast } = useToast();
 
   const { data: book, isLoading: bookLoading } = useQuery<Book>({
     queryKey: ["/api/books", id],
@@ -27,6 +33,28 @@ export default function BookPreview() {
 
   const { data: photos = [] } = useQuery<Photo[]>({
     queryKey: ["/api/books", id, "photos"],
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/books/${id}/approve`);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.alreadyApproved) {
+        setApproveConfirmed(true);
+        return;
+      }
+      setApproveConfirmed(true);
+      queryClient.invalidateQueries({ queryKey: ["/api/books", id] });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Approval failed",
+        description: err.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleDownload = async () => {
@@ -72,7 +100,7 @@ export default function BookPreview() {
     );
   }
 
-  if (book.status !== "completed" || !book.generatedContent) {
+  if (!["completed", "in_production"].includes(book.status) || !book.generatedContent) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="p-8 text-center max-w-md">
@@ -126,19 +154,53 @@ export default function BookPreview() {
                 <CreditCard className="w-4 h-4 mr-2" />
                 Order Your Book
               </Button>
-            ) : book.paid ? (
-              <Button
-                onClick={handleDownload}
-                disabled={downloading}
-                data-testid="button-download"
-              >
-                {downloading ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : book.paid && book.status === "in_production" ? (
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="status-in-production">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  In Production
+                </span>
+                <Button
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  variant="outline"
+                  data-testid="button-download"
+                >
+                  {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                  {downloading ? "Preparing..." : "Download"}
+                </Button>
+              </div>
+            ) : book.paid && book.status === "completed" ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  variant="outline"
+                  data-testid="button-download"
+                >
+                  {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                  {downloading ? "Preparing..." : "Download"}
+                </Button>
+                {!approveConfirmed ? (
+                  <Button
+                    onClick={() => approveMutation.mutate()}
+                    disabled={approveMutation.isPending}
+                    data-testid="button-approve-print"
+                  >
+                    {approveMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <PackageCheck className="w-4 h-4 mr-2" />
+                    )}
+                    {approveMutation.isPending ? "Submitting..." : "Approve for Print"}
+                  </Button>
                 ) : (
-                  <Download className="w-4 h-4 mr-2" />
+                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="status-approved">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    Approved
+                  </span>
                 )}
-                {downloading ? "Preparing..." : "Download"}
-              </Button>
+              </div>
             ) : (
               <Button
                 onClick={() => navigate(`/book/${id}/checkout`)}
@@ -152,6 +214,17 @@ export default function BookPreview() {
           </div>
         </div>
       </header>
+
+      {(approveConfirmed || book.status === "in_production") && (
+        <div className="border-b bg-green-50 dark:bg-green-950/30 px-4 py-4" data-testid="banner-approved">
+          <div className="max-w-3xl mx-auto flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+            <p className="text-sm font-medium text-green-800 dark:text-green-300">
+              Your book has been approved and is now being prepared for production.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-3xl mx-auto px-4 py-12">
         <div className="text-center mb-16">

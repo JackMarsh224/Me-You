@@ -7,6 +7,8 @@ import path from "path";
 import fs from "fs";
 import QRCode from "qrcode";
 import { INTERVIEW_CATEGORIES } from "@shared/schema";
+import { generateBookHTML } from "./services/generateBookFile";
+import { sendOrderEmail } from "./services/sendOrderEmail";
 
 const uploadsDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) {
@@ -372,6 +374,59 @@ export async function registerRoutes(
       res.send(qrBuffer);
     } catch (error) {
       res.status(500).json({ error: "Failed to generate QR code" });
+    }
+  });
+
+  app.post("/api/books/:id/approve", async (req, res) => {
+    try {
+      const bookId = Number(req.params.id);
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ error: "Book not found" });
+      if (!book.paid) return res.status(403).json({ error: "Payment required before approval" });
+      if (book.status !== "completed") return res.status(400).json({ error: "Book must be generated before approval" });
+
+      // Idempotency guard — never send twice
+      if (book.emailSentAt) {
+        return res.json({ ...book, alreadyApproved: true });
+      }
+
+      const photos = await storage.getPhotos(bookId);
+      const videos = await storage.getVideosByBookId(bookId);
+      const host = req.get("host") || "localhost:5000";
+      const protocol = req.get("x-forwarded-proto") || req.protocol;
+      const baseUrl = `${protocol}://${host}`;
+
+      // Generate book file
+      let fileBuffer: Buffer;
+      try {
+        fileBuffer = await generateBookHTML(book, photos, videos.map(v => ({ id: v.id, title: v.title })), baseUrl);
+      } catch (genErr) {
+        console.error("[approve] Book file generation failed:", genErr);
+        return res.status(500).json({ error: "Failed to generate book file" });
+      }
+
+      const fileName = `legacy-book-${bookId}-${book.authorName.replace(/\s+/g, "-")}.html`;
+      const approvedAt = new Date();
+
+      // Send email
+      try {
+        await sendOrderEmail({ bookId, authorName: book.authorName, approvedAt, fileBuffer, fileName });
+      } catch (emailErr) {
+        console.error("[approve] Email sending failed:", emailErr);
+        return res.status(500).json({ error: "Failed to send order email. Please check SMTP configuration." });
+      }
+
+      // Update status — only after successful email
+      const updatedBook = await storage.updateBook(bookId, {
+        status: "in_production",
+        approvedAt,
+        emailSentAt: approvedAt,
+      });
+
+      res.json(updatedBook);
+    } catch (error) {
+      console.error("Error approving book:", error);
+      res.status(500).json({ error: "Failed to approve book" });
     }
   });
 

@@ -1,0 +1,167 @@
+I need you to extend my existing legacy book app flow with a final step:
+
+Once a customer has:
+
+1. Paid for their order
+2. Completed the interview
+3. Reviewed the preview
+4. Approved/signs off the book
+
+👉 The system should automatically generate the final book file and email it to my email address as an order.
+
+Please implement this cleanly and production-ready, without breaking existing functionality.
+
+---
+
+## Core requirement
+
+When order status becomes:
+
+`approved_for_print`
+
+Trigger the following:
+
+### 1. Generate final book file
+
+* Create a final version of the book (PDF preferred)
+* Use the existing preview/draft content as the source
+* Ensure formatting is clean and consistent with the preview
+* File naming format:
+
+`legacy-book-{orderId}-{customerName}.pdf`
+
+If full PDF generation is not yet implemented:
+
+* Create a placeholder function that clearly marks where this happens
+* Still proceed with email sending using a mock/temporary file
+
+---
+
+### 2. Send email to admin (me)
+
+Send an email to:
+[INSERT MY EMAIL ADDRESS HERE]
+
+Email should include:
+
+* Subject:
+  `New Legacy Book Order - {customerName} - {orderId}`
+
+* Body should include:
+
+  * Customer name
+  * Customer email
+  * Order ID
+  * Date approved
+  * Any notes if available
+
+* Attach the generated PDF file
+
+---
+
+### 3. Update order status
+
+After successful email send:
+
+* Update order status to: `in_production` (or `ready_for_print`)
+* Store timestamp of approval and email sent
+* Prevent duplicate sends (important)
+
+---
+
+## Important logic
+
+* This email should ONLY trigger after customer approval
+* It should NOT trigger on payment
+* It should NOT trigger on interview completion
+* It must be idempotent (no duplicate emails if user refreshes)
+
+---
+
+## Edge cases
+
+Handle the following properly:
+
+* If email sending fails:
+
+  * Do NOT mark as completed
+  * Retry or log error clearly
+
+* If PDF generation fails:
+
+  * Do NOT send email
+  * Log error
+
+* If user clicks approve multiple times:
+
+  * Only send email once
+
+---
+
+## Tech requirements
+
+* Use existing email service if one is already integrated (e.g. SendGrid, Resend, Nodemailer, etc.)
+* Do NOT hardcode secrets — use environment variables
+* Reuse existing backend patterns and services
+* Keep everything modular (separate file generation and email logic)
+
+---
+
+## Suggested structure
+
+Create or extend:
+
+* `/services/generateBookFile.ts`
+* `/services/sendOrderEmail.ts`
+* `/services/orderWorkflow.ts`
+
+Keep logic reusable and clean.
+
+---
+
+## UX (important)
+
+After approval:
+
+* Show confirmation message:
+
+“Your book has been approved and is now being prepared for production.”
+
+* Do NOT mention internal email process to the customer
+
+---
+
+## What I want from you
+
+1. Inspect current codebase and locate:
+
+   * Order model
+   * Approval flow
+   * Preview system
+   * Email system (if exists)
+
+2. Implement:
+
+   * File generation step (or placeholder)
+   * Email sending with attachment
+   * Status updates
+
+3. Explain:
+
+   * What files you changed
+   * What new services were created
+   * Any environment variables required
+   * Any placeholders I need to complete later
+
+Do NOT give only a plan — implement the code.
+
+---
+
+## Critical rule
+
+The workflow must be:
+
+Pay → Interview → Preview → Approve →
+👉 Generate file → Email to admin → Mark ready for production
+
+Not before.
