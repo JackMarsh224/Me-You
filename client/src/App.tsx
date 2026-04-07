@@ -15,6 +15,7 @@ import VideoViewer from "@/pages/video-viewer";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import MyLibrary from "@/pages/my-library";
+import OrderSuccess from "@/pages/order-success";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/order" component={Order} />
+      <Route path="/order/success" component={OrderSuccess} />
       <Route path="/admin" component={Admin} />
       <Route path="/library" component={StoryLibrary} />
       <Route path="/about" component={About} />

@@ -9,6 +9,7 @@ import QRCode from "qrcode";
 import { INTERVIEW_CATEGORIES } from "@shared/schema";
 import { generateBookHTML } from "./services/generateBookFile";
 import { sendOrderEmail } from "./services/sendOrderEmail";
+import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 const uploadsDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) {
@@ -55,6 +56,121 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  // Stripe: get publishable key for frontend
+  app.get("/api/stripe/config", async (_req, res) => {
+    try {
+      const publishableKey = await getStripePublishableKey();
+      res.json({ publishableKey });
+    } catch (err: any) {
+      res.status(500).json({ error: "Stripe not configured" });
+    }
+  });
+
+  // Stripe: create checkout session (stores pending delivery info in metadata)
+  app.post("/api/stripe/create-checkout", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "You must be logged in" });
+    }
+    try {
+      const { authorName, customerEmail, deliveryName, deliveryAddress, deliveryCity, deliveryPostcode, deliveryCountry } = req.body;
+      if (!authorName) return res.status(400).json({ error: "Author name is required" });
+
+      const stripe = await getUncachableStripeClient();
+      const host = req.get("host") || "localhost:5000";
+      const protocol = req.get("x-forwarded-proto") || req.protocol;
+      const baseUrl = `${protocol}://${host}`;
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        mode: "payment",
+        line_items: [
+          {
+            price_data: {
+              currency: "gbp",
+              unit_amount: 4999,
+              product_data: {
+                name: "You & Me — A Life Story, Told",
+                description: `Personal memoir book for ${authorName}. AI-guided interview, 50+ pages, printed and shipped.`,
+              },
+            },
+            quantity: 1,
+          },
+        ],
+        customer_email: customerEmail || undefined,
+        metadata: {
+          userId: String(req.user!.id),
+          authorName,
+          customerEmail: customerEmail || "",
+          deliveryName: deliveryName || "",
+          deliveryAddress: deliveryAddress || "",
+          deliveryCity: deliveryCity || "",
+          deliveryPostcode: deliveryPostcode || "",
+          deliveryCountry: deliveryCountry || "",
+        },
+        success_url: `${baseUrl}/order/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/order?name=${encodeURIComponent(authorName)}`,
+      } as any);
+
+      res.json({ url: session.url, sessionId: session.id });
+    } catch (err: any) {
+      console.error("[stripe] Checkout session error:", err);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  // Stripe: verify payment and create book after successful checkout
+  app.post("/api/stripe/complete-order", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "You must be logged in" });
+    }
+    try {
+      const { sessionId } = req.body;
+      if (!sessionId) return res.status(400).json({ error: "Session ID required" });
+
+      const stripe = await getUncachableStripeClient();
+      const session = await (stripe.checkout.sessions as any).retrieve(sessionId);
+
+      if (session.payment_status !== "paid") {
+        return res.status(402).json({ error: "Payment not completed" });
+      }
+
+      const meta = session.metadata || {};
+      if (String(meta.userId) !== String(req.user!.id)) {
+        return res.status(403).json({ error: "Session does not belong to this user" });
+      }
+
+      const authorName = meta.authorName || "Unknown";
+      const book = await storage.createBook({
+        authorName: authorName.trim(),
+        title: `${authorName.trim()}'s Story`,
+        status: "interviewing",
+        currentCategory: "early_life",
+        userId: req.user!.id,
+        paid: true,
+        customerEmail: meta.customerEmail || null,
+        deliveryName: meta.deliveryName || null,
+        deliveryAddress: meta.deliveryAddress || null,
+        deliveryCity: meta.deliveryCity || null,
+        deliveryPostcode: meta.deliveryPostcode || null,
+        deliveryCountry: meta.deliveryCountry || null,
+      });
+
+      const initialQ = await getInitialQuestion(authorName.trim());
+      await storage.createMessage({
+        bookId: book.id,
+        role: "assistant",
+        content: initialQ,
+        category: "early_life",
+      });
+
+      res.status(201).json(book);
+    } catch (err: any) {
+      console.error("[stripe] Complete order error:", err);
+      res.status(500).json({ error: "Failed to complete order" });
+    }
+  });
+
   app.post("/api/books", async (req, res) => {
     try {
       const { authorName, paid, customerEmail, deliveryName, deliveryAddress, deliveryCity, deliveryPostcode, deliveryCountry } = req.body;

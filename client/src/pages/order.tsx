@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Loader2, ArrowLeft, Lock, Package, BookOpen, Check } from "lucide-react";
+import { Loader2, ArrowLeft, Lock, Package, BookOpen, Check, CreditCard } from "lucide-react";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import logoImage from "@assets/logo_transparent.png";
@@ -28,9 +28,6 @@ export default function Order() {
     city: "",
     postcode: "",
     country: "United Kingdom",
-    cardNumber: "",
-    cardExpiry: "",
-    cardCvc: "",
   });
 
   useEffect(() => {
@@ -39,11 +36,10 @@ export default function Order() {
     }
   }, [user, userLoading]);
 
-  const createBook = useMutation({
+  const checkout = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/books", {
+      const res = await apiRequest("POST", "/api/stripe/create-checkout", {
         authorName: form.deliveryName || authorName,
-        paid: true,
         customerEmail: form.email,
         deliveryName: form.deliveryName,
         deliveryAddress: form.address,
@@ -53,8 +49,12 @@ export default function Order() {
       });
       return res.json();
     },
-    onSuccess: (book) => {
-      navigate(`/interview/${book.id}`);
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast({ title: "Error", description: data.error || "Could not start checkout", variant: "destructive" });
+      }
     },
     onError: (err: any) => {
       toast({
@@ -72,7 +72,7 @@ export default function Order() {
       toast({ title: "Please fill in all fields", variant: "destructive" });
       return;
     }
-    createBook.mutate();
+    checkout.mutate();
   };
 
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -207,49 +207,20 @@ export default function Order() {
               </CardContent>
             </Card>
 
-            {/* Payment */}
+            {/* Payment info */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Lock className="w-4 h-4" /> Payment
+                  <Lock className="w-4 h-4" /> Secure Payment
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="rounded-md border bg-muted/40 px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
-                  <Lock className="w-3.5 h-3.5 shrink-0" />
-                  Secure payment powered by Stripe — coming soon. Click below to place your order and your interview will begin immediately.
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Card number</label>
-                  <Input
-                    placeholder="1234 5678 9012 3456"
-                    value={form.cardNumber}
-                    onChange={set("cardNumber")}
-                    maxLength={19}
-                    data-testid="input-card-number"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Expiry</label>
-                    <Input
-                      placeholder="MM / YY"
-                      value={form.cardExpiry}
-                      onChange={set("cardExpiry")}
-                      maxLength={7}
-                      data-testid="input-card-expiry"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">CVC</label>
-                    <Input
-                      placeholder="123"
-                      value={form.cardCvc}
-                      onChange={set("cardCvc")}
-                      maxLength={4}
-                      data-testid="input-card-cvc"
-                    />
-                  </div>
+              <CardContent>
+                <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                  <CreditCard className="w-5 h-5 shrink-0 mt-0.5" />
+                  <p>
+                    You'll be redirected to Stripe's secure checkout to enter your payment details. 
+                    We never store your card information.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -274,18 +245,18 @@ export default function Order() {
               type="submit"
               size="lg"
               className="w-full text-base"
-              disabled={createBook.isPending}
+              disabled={checkout.isPending}
               data-testid="button-place-order"
             >
-              {createBook.isPending ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Starting your interview...</>
+              {checkout.isPending ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Redirecting to payment…</>
               ) : (
-                <>Pay £49.99 &amp; Begin Your Story</>
+                <><Lock className="w-4 h-4 mr-2" />Pay £49.99 Securely</>
               )}
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">
-              By placing your order you agree to our terms of service. Your book will be created through an AI-guided interview session.
+              By placing your order you agree to our terms of service. You'll complete your payment via Stripe's secure checkout.
             </p>
           </form>
         </div>
