@@ -67,8 +67,8 @@ export async function registerRoutes(
     }
   });
 
-  // Stripe: create checkout session (stores pending delivery info in metadata)
-  app.post("/api/stripe/create-checkout", async (req, res) => {
+  // Stripe: create PaymentIntent (embedded payment, no redirect)
+  app.post("/api/stripe/create-payment-intent", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "You must be logged in" });
     }
@@ -77,27 +77,12 @@ export async function registerRoutes(
       if (!authorName) return res.status(400).json({ error: "Author name is required" });
 
       const stripe = await getUncachableStripeClient();
-      const host = req.get("host") || "localhost:5000";
-      const protocol = req.get("x-forwarded-proto") || req.protocol;
-      const baseUrl = `${protocol}://${host}`;
-
-      const session = await stripe.checkout.sessions.create({
+      const pi = await (stripe.paymentIntents as any).create({
+        amount: 4999,
+        currency: "gbp",
         payment_method_types: ["card"],
-        mode: "payment",
-        line_items: [
-          {
-            price_data: {
-              currency: "gbp",
-              unit_amount: 4999,
-              product_data: {
-                name: "You & Me — A Life Story, Told",
-                description: `Personal memoir book for ${authorName}. AI-guided interview, 50+ pages, printed and shipped.`,
-              },
-            },
-            quantity: 1,
-          },
-        ],
-        customer_email: customerEmail || undefined,
+        receipt_email: customerEmail || undefined,
+        description: `You & Me — Life Story Book for ${authorName}`,
         metadata: {
           userId: String(req.user!.id),
           authorName,
@@ -108,36 +93,34 @@ export async function registerRoutes(
           deliveryPostcode: deliveryPostcode || "",
           deliveryCountry: deliveryCountry || "",
         },
-        success_url: `${baseUrl}/order/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/order?name=${encodeURIComponent(authorName)}`,
-      } as any);
+      });
 
-      res.json({ url: session.url, sessionId: session.id });
+      res.json({ clientSecret: pi.client_secret, paymentIntentId: pi.id });
     } catch (err: any) {
-      console.error("[stripe] Checkout session error:", err);
-      res.status(500).json({ error: "Failed to create checkout session" });
+      console.error("[stripe] PaymentIntent error:", err);
+      res.status(500).json({ error: "Failed to create payment" });
     }
   });
 
-  // Stripe: verify payment and create book after successful checkout
-  app.post("/api/stripe/complete-order", async (req, res) => {
+  // Stripe: complete order after inline payment confirmation
+  app.post("/api/stripe/complete-payment-intent", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "You must be logged in" });
     }
     try {
-      const { sessionId } = req.body;
-      if (!sessionId) return res.status(400).json({ error: "Session ID required" });
+      const { paymentIntentId } = req.body;
+      if (!paymentIntentId) return res.status(400).json({ error: "PaymentIntent ID required" });
 
       const stripe = await getUncachableStripeClient();
-      const session = await (stripe.checkout.sessions as any).retrieve(sessionId);
+      const pi = await (stripe.paymentIntents as any).retrieve(paymentIntentId);
 
-      if (session.payment_status !== "paid") {
+      if (pi.status !== "succeeded") {
         return res.status(402).json({ error: "Payment not completed" });
       }
 
-      const meta = session.metadata || {};
+      const meta = pi.metadata || {};
       if (String(meta.userId) !== String(req.user!.id)) {
-        return res.status(403).json({ error: "Session does not belong to this user" });
+        return res.status(403).json({ error: "Payment does not belong to this user" });
       }
 
       const authorName = meta.authorName || "Unknown";
@@ -166,7 +149,7 @@ export async function registerRoutes(
 
       res.status(201).json(book);
     } catch (err: any) {
-      console.error("[stripe] Complete order error:", err);
+      console.error("[stripe] Complete payment error:", err);
       res.status(500).json({ error: "Failed to complete order" });
     }
   });
