@@ -30,6 +30,7 @@ import {
   VolumeX,
   ChevronDown,
   Video,
+  Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { Book, InterviewMessage, Photo, InterviewCategory } from "@shared/schema";
@@ -132,6 +133,7 @@ function stopSpeaking() {
 }
 
 const categoryIcons: Record<string, any> = {
+  tone_setting: Sparkles,
   early_life: Baby,
   family: Heart,
   career: Briefcase,
@@ -243,14 +245,20 @@ export default function Interview() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamedContent]);
 
-  const currentCategoryIndex = INTERVIEW_CATEGORIES.findIndex(
+  const isToneSetting = book?.currentCategory === "tone_setting";
+  const interviewCategories = INTERVIEW_CATEGORIES.filter(c => c.id !== "tone_setting");
+  const currentCategoryIndex = interviewCategories.findIndex(
     (c) => c.id === book?.currentCategory
   );
   const progress = book?.status === "completed"
     ? 100
-    : ((currentCategoryIndex + 1) / INTERVIEW_CATEGORIES.length) * 100;
+    : isToneSetting
+      ? 0
+      : ((currentCategoryIndex + 1) / interviewCategories.length) * 100;
 
-  const categoryPhotos = photos.filter((p) => p.category === book?.currentCategory);
+  const categoryPhotos = isToneSetting
+    ? []
+    : photos.filter((p) => p.category === book?.currentCategory);
 
   const sendMessage = async () => {
     if (!message.trim() || isStreaming) return;
@@ -531,11 +539,17 @@ export default function Interview() {
 
       <div className="hidden sm:block border-b bg-card/50 shrink-0">
         <div className="max-w-4xl mx-auto px-4 py-2 flex gap-1 overflow-x-auto">
-          {INTERVIEW_CATEGORIES.map((cat) => {
+          {isToneSetting ? (
+            <Badge variant="default" className="shrink-0 gap-1" data-testid="badge-category-tone_setting">
+              <Sparkles className="w-3 h-3" />
+              <span className="hidden md:inline">Introduction &amp; Tone</span>
+            </Badge>
+          ) : null}
+          {interviewCategories.map((cat) => {
             const Icon = categoryIcons[cat.id];
-            const catIndex = INTERVIEW_CATEGORIES.indexOf(cat);
+            const catIndex = interviewCategories.indexOf(cat);
             const isActive = cat.id === book.currentCategory;
-            const isDone = catIndex < currentCategoryIndex;
+            const isDone = !isToneSetting && catIndex < currentCategoryIndex;
             return (
               <Badge
                 key={cat.id}

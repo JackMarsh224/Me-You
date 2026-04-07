@@ -128,7 +128,7 @@ export async function registerRoutes(
         authorName: authorName.trim(),
         title: `${authorName.trim()}'s Story`,
         status: "interviewing",
-        currentCategory: "early_life",
+        currentCategory: "tone_setting",
         userId: req.user!.id,
         paid: true,
         customerEmail: meta.customerEmail || null,
@@ -144,7 +144,7 @@ export async function registerRoutes(
         bookId: book.id,
         role: "assistant",
         content: initialQ,
-        category: "early_life",
+        category: "tone_setting",
       });
 
       res.status(201).json(book);
@@ -167,7 +167,7 @@ export async function registerRoutes(
         authorName: authorName.trim(),
         title: `${authorName.trim()}'s Story`,
         status: "interviewing",
-        currentCategory: "early_life",
+        currentCategory: "tone_setting",
         userId: req.user!.id,
         paid: paid === true,
         customerEmail: customerEmail || null,
@@ -183,7 +183,7 @@ export async function registerRoutes(
         bookId: book.id,
         role: "assistant",
         content: initialQ,
-        category: "early_life",
+        category: "tone_setting",
       });
 
       res.status(201).json(book);
@@ -275,13 +275,22 @@ export async function registerRoutes(
         category: book.currentCategory,
       });
 
-      const shouldAdvance = checkShouldAdvanceCategory(messages.length, fullResponse);
-      if (shouldAdvance && book.currentCategory) {
-        const catIndex = INTERVIEW_CATEGORIES.findIndex(c => c.id === book.currentCategory);
-        if (catIndex < INTERVIEW_CATEGORIES.length - 1) {
-          await storage.updateBook(bookId, {
-            currentCategory: INTERVIEW_CATEGORIES[catIndex + 1].id,
-          });
+      // Tone-setting phase: advance to early_life when user says "let's begin"
+      if (book.currentCategory === "tone_setting") {
+        const userSaidBegin = /let['']?s\s+begin|let us begin|i['']?m\s+ready|lets\s+begin|start\s+(the\s+)?interview|ready\s+to\s+begin|begin\s+now/i.test(content.trim());
+        if (userSaidBegin) {
+          await storage.updateBook(bookId, { currentCategory: "early_life" });
+        }
+      } else {
+        // Normal interview phase: advance by message count
+        const shouldAdvance = checkShouldAdvanceCategory(messages.length, fullResponse);
+        if (shouldAdvance && book.currentCategory) {
+          const catIndex = INTERVIEW_CATEGORIES.findIndex(c => c.id === book.currentCategory);
+          if (catIndex < INTERVIEW_CATEGORIES.length - 1) {
+            await storage.updateBook(bookId, {
+              currentCategory: INTERVIEW_CATEGORIES[catIndex + 1].id,
+            });
+          }
         }
       }
 

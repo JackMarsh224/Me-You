@@ -17,8 +17,9 @@ A personal book creation platform where users pay £49.99 upfront, provide deliv
 ## Key Features
 1. **Landing Page** - Clean black and white design with "You & Me" logo and hero background image; "Shipped to Your Door" messaging
 2. **User Authentication** - Register/login with username+password; session-based auth; auth-aware header navigation; `?next` redirect param supported
-3. **Order Page (`/order`)** - Delivery address form + payment form (£49.99, Stripe placeholder); book created with paid=true + delivery info stored; requires login
-4. **AI Interview** - 7-category guided conversation (Early Life, Family, Career, Beliefs, Wisdom, Predictions, Legacy); gated behind payment
+3. **Order Page (`/order`)** - Delivery address form + embedded Stripe Payment Element (£49.99, GBP); book created only after payment confirmed; requires login; two-step: details → inline Stripe card form → pay
+4. **AI Interview** - Pre-interview tone-setting phase + 7-category guided conversation (Early Life, Family, Career, Beliefs, Wisdom, Predictions, Legacy); gated behind payment
+5. **Tone-Setting Introduction** - Before the interview begins, AI spends ~5 mins gathering: purpose of the book, desired tone/feel, specific themes to capture. Customer says "Let's begin" to start the actual interview
 5. **Voice Capture** - AI learns how the person speaks and writes the book in their authentic voice
 6. **Voice Interaction** - Text-to-speech reads AI prompts aloud (toggle in header); Speech-to-text microphone input transcribes spoken responses (Web Speech API, no external deps)
 7. **Voice Selector** - Users can choose which TTS voice interviews them (dropdown on speaker icon when TTS is enabled); saved in localStorage as "you-and-me-voice"

@@ -103,6 +103,7 @@ export type Video = typeof videos.$inferSelect;
 export type InsertVideo = z.infer<typeof insertVideoSchema>;
 
 export const INTERVIEW_CATEGORIES = [
+  { id: "tone_setting", label: "Introduction & Tone", icon: "sparkles" },
   { id: "early_life", label: "Early Life & Childhood", icon: "baby" },
   { id: "family", label: "Family & Relationships", icon: "heart" },
   { id: "career", label: "Career & Achievements", icon: "briefcase" },

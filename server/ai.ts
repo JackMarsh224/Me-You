@@ -43,49 +43,102 @@ Interview categories to cover:
 
 Keep your responses conversational and concise. Ask ONE question at a time. Don't overwhelm them. Let the conversation flow naturally.`;
 
+const TONE_SETTING_SYSTEM = `You are a warm, perceptive guide helping someone create a deeply personal memoir book — "You & Me — A Life Story, Told."
+
+Before the interview begins, you spend 5 minutes in a gentle conversation to understand:
+1. WHY they are creating this book — who is it for? What do they hope it achieves?
+2. What TONE and FEEL they want — should it be heartfelt and reflective? Funny and light? A mix? Formal or casual? Like chatting over a cup of tea?
+3. Any particular stories, themes, or values they absolutely want captured
+
+Ask ONE question at a time. Be warm, unhurried, and curious. This is a conversation, not a form to fill in.
+
+After 3–4 good exchanges where you've gathered a clear sense of their purpose and desired tone, summarise what you've understood in 2–3 sentences, then invite them to begin by saying:
+
+"Whenever you're ready, just say 'Let's begin' and we'll start your story."
+
+Do NOT start the life story interview questions yet — that comes after they say "Let's begin."`;
+
 export async function getInitialQuestion(authorName: string): Promise<string> {
   const response = await openai.chat.completions.create({
     model: "gpt-5.2",
     messages: [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: TONE_SETTING_SYSTEM },
       {
         role: "user",
-        content: `The person's name is ${authorName}. Write a SHORT, warm intro — 2-3 sentences max. Keep it casual and direct. Tell them:
-- We'll have a conversation covering their life story across a few topics
-- It'll become a real printed book written in their own voice
-- They can upload photos along the way
+        content: `The person's name is ${authorName}. Write your opening message. It should:
+- Warmly welcome them by name (1 sentence)
+- Briefly explain what you'll do together: before diving into their life story, you want to spend a few minutes making sure the book is shaped the way they want it
+- Ask ONE focused question to kick things off — something like: "Before we dive into your story, I'd love to understand — who is this book for, and what do you hope they take from it?"
 
-End with one short line inviting them to begin when ready. No lists, no bold headers, no long explanation. Sound like a real person, not an onboarding guide.
-
-Do NOT ask any interview questions yet.`,
+Keep it natural, warm, and conversational. No bullet lists. No bold text. Sound like a real person who genuinely cares. End on the question.`,
       },
     ],
-    max_completion_tokens: 200,
+    max_completion_tokens: 220,
   });
 
-  return response.choices[0]?.message?.content || `Hi ${authorName} — we're going to have a real conversation about your life, and turn it into a printed book written in your own voice. We'll cover a handful of topics, and you can upload photos along the way to bring it to life.\n\nWhenever you're ready, just say so.`;
+  return response.choices[0]?.message?.content || `Hi ${authorName} — before we dive into your life story, I want to make sure this book feels exactly right for you.\n\nWho is this book for, and what do you hope they take from it when they read it?`;
 }
 
 export async function interviewChat(
   messages: InterviewMessage[],
   book: Book
 ): Promise<AsyncIterable<string>> {
-  const currentCategory = INTERVIEW_CATEGORIES.find(c => c.id === book.currentCategory);
-  const categoryIndex = INTERVIEW_CATEGORIES.findIndex(c => c.id === book.currentCategory);
+  const isToneSetting = book.currentCategory === "tone_setting";
 
-  const isFirstUserMessage = messages.filter(m => m.role === "user").length <= 1;
-  const firstMsgContext = isFirstUserMessage
-    ? `\n\nThis is the person's first reply. They are indicating they're ready to begin. Start the actual interview now by warmly transitioning into the first topic — Early Life & Childhood. Ask ONE thoughtful opening question about where they grew up or their earliest memories. Also, gently remind them they can upload photos from their childhood for this section.`
+  if (isToneSetting) {
+    // Tone-setting phase: gather purpose and desired tone, then invite "Let's begin"
+    const toneMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+      { role: "system", content: TONE_SETTING_SYSTEM },
+      ...messages.map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      })),
+    ];
+
+    const stream = await openai.chat.completions.create({
+      model: "gpt-5.2",
+      messages: toneMessages,
+      stream: true,
+      max_completion_tokens: 400,
+    });
+
+    return (async function* () {
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content;
+        if (content) yield content;
+      }
+    })();
+  }
+
+  // Main interview phase
+  const currentCategory = INTERVIEW_CATEGORIES.find(c => c.id === book.currentCategory);
+  const interviewCategories = INTERVIEW_CATEGORIES.filter(c => c.id !== "tone_setting");
+  const categoryIndex = interviewCategories.findIndex(c => c.id === book.currentCategory);
+
+  const isFirstInterviewMessage = book.currentCategory === "early_life" &&
+    messages.filter(m => m.role === "user" && m.category !== "tone_setting").length <= 1;
+
+  const firstMsgContext = isFirstInterviewMessage
+    ? `\n\nThe person has just said "Let's begin" (or similar). Transition warmly into the actual interview. Start with Early Life & Childhood — ask ONE thoughtful opening question about where they grew up or their earliest memories. Gently mention they can upload childhood photos for this section.`
     : "";
 
   const categoryContext = currentCategory
-    ? `\n\nCurrent topic area: "${currentCategory.label}" (category ${categoryIndex + 1} of ${INTERVIEW_CATEGORIES.length}). Stay on this topic unless the person has shared enough, in which case naturally transition to the next topic. When transitioning, briefly acknowledge what they've shared, then introduce the next topic and remind them they can upload any photos from that era/topic if they'd like.`
+    ? `\n\nCurrent topic: "${currentCategory.label}" (${categoryIndex + 1} of ${interviewCategories.length} interview chapters). Stay on this topic unless they've shared enough, then naturally transition to the next topic. When transitioning, acknowledge what they've shared and remind them they can upload photos from that era.`
     : "";
 
-  const voiceContext = `\n\nRemember: pay attention to HOW they speak. Mirror their energy and style in your responses. If they're casual, be casual back. If they're reflective, match that tone. This helps build rapport and also helps you gather data about their voice for the final book.`;
+  const voiceContext = `\n\nPay close attention to HOW they speak throughout — vocabulary, sentence length, tone, humour, expressions. Mirror their energy. This shapes the final book's voice.`;
+
+  // Include any tone/purpose notes captured during the tone_setting phase
+  const toneNotes = messages
+    .filter(m => m.category === "tone_setting" && m.role === "user")
+    .map(m => m.content)
+    .join(" | ");
+  const toneContext = toneNotes
+    ? `\n\nNOTE — From the intro conversation, the person shared: "${toneNotes.substring(0, 600)}". Keep this in mind throughout — let their stated purpose and desired tone guide how you ask questions and what you draw out.`
+    : "";
 
   const chatMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-    { role: "system", content: SYSTEM_PROMPT + firstMsgContext + categoryContext + voiceContext },
+    { role: "system", content: SYSTEM_PROMPT + firstMsgContext + categoryContext + voiceContext + toneContext },
     ...messages.map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
@@ -102,9 +155,7 @@ export async function interviewChat(
   return (async function* () {
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content;
-      if (content) {
-        yield content;
-      }
+      if (content) yield content;
     }
   })();
 }
