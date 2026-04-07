@@ -420,7 +420,19 @@ export async function registerRoutes(
 
       // Send email
       try {
-        await sendOrderEmail({ bookId, authorName: book.authorName, approvedAt, fileBuffer, fileName });
+        await sendOrderEmail({
+          bookId,
+          authorName: book.authorName,
+          approvedAt,
+          fileBuffer,
+          fileName,
+          customerEmail: book.customerEmail,
+          deliveryName: book.deliveryName,
+          deliveryAddress: book.deliveryAddress,
+          deliveryCity: book.deliveryCity,
+          deliveryPostcode: book.deliveryPostcode,
+          deliveryCountry: book.deliveryCountry,
+        });
       } catch (emailErr) {
         console.error("[approve] Email sending failed:", emailErr);
         return res.status(500).json({ error: "Failed to send order email. Please check SMTP configuration." });

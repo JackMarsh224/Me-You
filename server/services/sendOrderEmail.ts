@@ -8,6 +8,12 @@ interface OrderEmailOptions {
   approvedAt: Date;
   fileBuffer: Buffer;
   fileName: string;
+  customerEmail?: string | null;
+  deliveryName?: string | null;
+  deliveryAddress?: string | null;
+  deliveryCity?: string | null;
+  deliveryPostcode?: string | null;
+  deliveryCountry?: string | null;
 }
 
 function createTransport() {
@@ -31,11 +37,15 @@ function createTransport() {
 }
 
 export async function sendOrderEmail(options: OrderEmailOptions): Promise<void> {
-  const { bookId, authorName, approvedAt, fileBuffer, fileName } = options;
+  const { bookId, authorName, approvedAt, fileBuffer, fileName,
+    customerEmail, deliveryName, deliveryAddress, deliveryCity, deliveryPostcode, deliveryCountry } = options;
 
   const transport = createTransport();
 
   const subject = `New Legacy Book Order - ${authorName} - #${bookId}`;
+
+  const deliveryLine = [deliveryAddress, deliveryCity, deliveryPostcode, deliveryCountry]
+    .filter(Boolean).join(", ");
 
   const htmlBody = `
     <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
@@ -45,16 +55,32 @@ export async function sendOrderEmail(options: OrderEmailOptions): Promise<void> 
       <p style="font-size: 16px;">A customer has approved their book and it is ready for production.</p>
       <table style="width: 100%; border-collapse: collapse; margin: 24px 0;">
         <tr>
-          <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; width: 40%; background: #f5f5f5;">Customer Name</td>
-          <td style="padding: 10px; border: 1px solid #ddd;">${authorName}</td>
-        </tr>
-        <tr>
-          <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Order ID</td>
+          <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; width: 40%; background: #f5f5f5;">Order ID</td>
           <td style="padding: 10px; border: 1px solid #ddd;">#${bookId}</td>
         </tr>
         <tr>
+          <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Customer Name</td>
+          <td style="padding: 10px; border: 1px solid #ddd;">${authorName}</td>
+        </tr>
+        ${customerEmail ? `
+        <tr>
+          <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Email</td>
+          <td style="padding: 10px; border: 1px solid #ddd;">${customerEmail}</td>
+        </tr>` : ""}
+        <tr>
           <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Date Approved</td>
           <td style="padding: 10px; border: 1px solid #ddd;">${approvedAt.toUTCString()}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5; vertical-align: top;">Delivery Address</td>
+          <td style="padding: 10px; border: 1px solid #ddd;">
+            ${deliveryName ? `<strong>${deliveryName}</strong><br>` : ""}
+            ${deliveryAddress ? `${deliveryAddress}<br>` : ""}
+            ${deliveryCity ? `${deliveryCity}<br>` : ""}
+            ${deliveryPostcode ? `${deliveryPostcode}<br>` : ""}
+            ${deliveryCountry || ""}
+            ${!deliveryLine ? "Not provided" : ""}
+          </td>
         </tr>
       </table>
       <p style="font-size: 14px; color: #555;">
