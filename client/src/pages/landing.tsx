@@ -172,8 +172,7 @@ export default function Landing() {
             your family will keep forever.
           </h1>
           <p className="text-base sm:text-lg text-white/80 max-w-xl mx-auto mb-3 leading-relaxed font-medium">
-            An AI-guided interview that turns your memories, values, and voice
-            into a professionally printed memoir — shipped to your door.
+            A guided conversation that turns your life into a beautifully written book — in your own voice.
           </p>
           <p className="text-sm text-white/60 max-w-lg mx-auto mb-10">
             For yourself, a parent, or anyone whose story deserves to be told before it's lost.
