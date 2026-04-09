@@ -32,17 +32,17 @@ export default function Landing() {
   const steps = [
     {
       number: "01",
-      title: "Answer guided questions",
+      title: "Share your story",
       description: "An AI interviewer asks thoughtful questions across seven chapters of your life — at your own pace, in your own words.",
     },
     {
       number: "02",
-      title: "AI shapes your story",
+      title: "We bring it to life",
       description: "The AI listens for how you speak and writes your story in your authentic voice — not generic prose, but unmistakably you.",
     },
     {
       number: "03",
-      title: "Receive your finished book",
+      title: "Hold your story in your hands",
       description: "Your 50+ page memoir arrives beautifully formatted, printed, and shipped directly to your door.",
     },
   ];
