@@ -260,6 +260,10 @@ export default function Landing() {
                 <span className="w-1.5 h-1.5 rounded-full bg-foreground inline-block" />
                 Delivered within 5 working days
               </span>
+              <span className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-foreground inline-block" />
+                Review and approve your book before it's printed
+              </span>
             </div>
           </div>
           <div className="text-center">
