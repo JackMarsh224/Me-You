@@ -245,7 +245,24 @@ export default function Landing() {
               </div>
             ))}
           </div>
-          <div className="text-center mt-12">
+          <div className="mt-12 mb-10 text-center">
+            <p className="font-serif text-xl font-bold mb-5">Simple. Thoughtful. Done in under an hour.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-10 text-sm text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-foreground inline-block" />
+                Takes 45–60 minutes
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-foreground inline-block" />
+                £49.99 for your complete book
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-foreground inline-block" />
+                Delivered within 5 working days
+              </span>
+            </div>
+          </div>
+          <div className="text-center">
             <Button
               size="lg"
               onClick={() => setShowStart(true)}
