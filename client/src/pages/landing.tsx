@@ -167,9 +167,9 @@ export default function Landing() {
             className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-4 text-white"
             data-testid="text-hero-title"
           >
-            Every life deserves
+            Turn your life into a story
             <br />
-            to be remembered.
+            your family will keep forever.
           </h1>
           <p className="text-base sm:text-lg text-white/80 max-w-xl mx-auto mb-3 leading-relaxed font-medium">
             An AI-guided interview that turns your memories, values, and voice
