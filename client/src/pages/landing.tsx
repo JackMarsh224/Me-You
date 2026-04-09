@@ -274,10 +274,10 @@ export default function Landing() {
             {[
               { title: "Early Life & Childhood", desc: "Where your story began — the places, people, and moments that made you" },
               { title: "Family & Relationships", desc: "The bonds that shaped you and the love that defined your life" },
-              { title: "Career & Achievements", desc: "Your professional journey and what you built along the way" },
+              { title: "What You Built & Why It Mattered", desc: "Your professional journey and what you built along the way" },
               { title: "Core Beliefs & Values", desc: "What you stand for, what you believe, and why" },
               { title: "Life Lessons & Wisdom", desc: "Hard-won insights you'd want the next generation to carry forward" },
-              { title: "Predictions & Future", desc: "Your vision for the world and the people you love" },
+              { title: "Hopes for the Future", desc: "Your vision for the world and the people you love" },
               { title: "Legacy & Final Words", desc: "The message you most want remembered long after you're gone" },
             ].map((chapter, i) => (
               <div

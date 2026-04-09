@@ -107,10 +107,10 @@ export const INTERVIEW_CATEGORIES = [
   { id: "tone_setting", label: "Introduction & Tone", icon: "sparkles" },
   { id: "early_life", label: "Early Life & Childhood", icon: "baby" },
   { id: "family", label: "Family & Relationships", icon: "heart" },
-  { id: "career", label: "Career & Achievements", icon: "briefcase" },
+  { id: "career", label: "What You Built & Why It Mattered", icon: "briefcase" },
   { id: "beliefs", label: "Core Beliefs & Values", icon: "compass" },
   { id: "wisdom", label: "Life Lessons & Wisdom", icon: "lightbulb" },
-  { id: "predictions", label: "Predictions & Future Vision", icon: "telescope" },
+  { id: "predictions", label: "Hopes for the Future", icon: "telescope" },
   { id: "legacy", label: "Legacy & Final Words", icon: "feather" },
 ] as const;
 
