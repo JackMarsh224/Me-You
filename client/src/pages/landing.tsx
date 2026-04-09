@@ -143,7 +143,7 @@ export default function Landing() {
               onClick={() => setShowStart(true)}
               data-testid="button-start-header"
             >
-              Start Your Interview
+              Start Telling Your Story
             </Button>
           </nav>
         </div>
@@ -184,7 +184,7 @@ export default function Landing() {
               onClick={() => setShowStart(true)}
               data-testid="button-start-hero"
             >
-              Start Your Interview
+              Start Telling Your Story
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             <Button
@@ -251,7 +251,7 @@ export default function Landing() {
               onClick={() => setShowStart(true)}
               data-testid="button-start-steps"
             >
-              Start Your Interview
+              Start Telling Your Story
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
