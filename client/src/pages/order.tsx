@@ -94,7 +94,7 @@ export default function Order() {
   const urlName = search.get("name") || "";
 
   const { data: user, isLoading: userLoading } = useQuery<{
-    id: number; username: string;
+    id: number; username: string; email?: string | null;
   } | null>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
@@ -102,7 +102,6 @@ export default function Order() {
 
   const [form, setForm] = useState({
     authorName: urlName,
-    email: "",
     deliveryName: urlName,
     address: "",
     city: "",
@@ -142,7 +141,7 @@ export default function Order() {
   const handleContinueToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     const required = [
-      form.authorName, form.email, form.deliveryName,
+      form.authorName, form.deliveryName,
       form.address, form.city, form.postcode, form.country,
     ];
     if (required.some((f) => !f.trim())) {
@@ -153,7 +152,6 @@ export default function Order() {
     try {
       const res = await apiRequest("POST", "/api/stripe/create-payment-intent", {
         authorName: form.authorName || form.deliveryName,
-        customerEmail: form.email,
         deliveryName: form.deliveryName,
         deliveryAddress: form.address,
         deliveryCity: form.city,
@@ -257,7 +255,7 @@ export default function Order() {
           {/* STEP 1: Details form */}
           {step === "details" && (
             <form onSubmit={handleContinueToPayment} className="space-y-4">
-              {/* Name + email */}
+              {/* Book subject name */}
               <Card>
                 <CardContent className="pt-4 space-y-3">
                   <div>
@@ -272,20 +270,11 @@ export default function Order() {
                       data-testid="input-author-name"
                     />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Email address</label>
-                    <Input
-                      type="email"
-                      placeholder="your@email.com"
-                      value={form.email}
-                      onChange={set("email")}
-                      required
-                      data-testid="input-email"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Stripe will send a payment receipt here
+                  {user?.email && (
+                    <p className="text-xs text-muted-foreground">
+                      Order confirmation will be sent to <strong>{user.email}</strong>
                     </p>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
 

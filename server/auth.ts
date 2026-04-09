@@ -27,6 +27,7 @@ declare global {
     interface User {
       id: number;
       username: string;
+      email: string | null;
       password: string;
       isAdmin: boolean;
       createdAt: Date;
@@ -104,9 +105,12 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res) => {
     try {
-      const { username, password } = req.body;
+      const { username, email, password } = req.body;
       if (!username || !password) {
         return res.status(400).json({ error: "Username and password are required" });
+      }
+      if (!email || !email.includes("@")) {
+        return res.status(400).json({ error: "A valid email address is required" });
       }
       if (password.length < 6) {
         return res.status(400).json({ error: "Password must be at least 6 characters" });
@@ -116,10 +120,10 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ error: "Username already taken" });
       }
       const hashedPassword = await hashPassword(password);
-      const user = await storage.createUser({ username, password: hashedPassword });
+      const user = await storage.createUser({ username, email: email.trim().toLowerCase(), password: hashedPassword });
       req.login(user, (err) => {
         if (err) return res.status(500).json({ error: "Login failed after registration" });
-        return res.status(201).json({ id: user.id, username: user.username });
+        return res.status(201).json({ id: user.id, username: user.username, email: user.email });
       });
     } catch (error) {
       res.status(500).json({ error: "Registration failed" });
@@ -147,6 +151,6 @@ export function setupAuth(app: Express) {
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
     const user = req.user!;
-    res.json({ id: user.id, username: user.username, isAdmin: user.isAdmin });
+    res.json({ id: user.id, username: user.username, email: user.email, isAdmin: user.isAdmin });
   });
 }

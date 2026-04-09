@@ -8,7 +8,7 @@ A personal book creation platform where users pay £49.99 upfront, provide deliv
 - **Backend**: Express.js with RESTful API + SSE streaming for AI chat
 - **Database**: PostgreSQL with Drizzle ORM
 - **AI**: OpenAI via Replit AI Integrations (gpt-5.2 model)
-- **Auth**: Passport-local + express-session (SESSION_SECRET env var)
+- **Auth**: Passport-local + express-session (SESSION_SECRET env var); email required at registration; email returned from /api/user
 - **File uploads**: Multer for photos (10MB) and videos (100MB), stored in `uploads/` directory
 - **QR Codes**: `qrcode` package for generating video QR codes
 - **Email**: Nodemailer sends book HTML file to jack@jigsawgym.com on approval

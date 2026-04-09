@@ -9,6 +9,7 @@ import QRCode from "qrcode";
 import { INTERVIEW_CATEGORIES } from "@shared/schema";
 import { generateBookHTML } from "./services/generateBookFile";
 import { sendOrderEmail } from "./services/sendOrderEmail";
+import { sendOrderConfirmationEmail, sendInProductionEmail } from "./services/sendCustomerEmail";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 const uploadsDir = path.join(process.cwd(), "uploads");
@@ -73,20 +74,21 @@ export async function registerRoutes(
       return res.status(401).json({ error: "You must be logged in" });
     }
     try {
-      const { authorName, customerEmail, deliveryName, deliveryAddress, deliveryCity, deliveryPostcode, deliveryCountry } = req.body;
+      const { authorName, deliveryName, deliveryAddress, deliveryCity, deliveryPostcode, deliveryCountry } = req.body;
       if (!authorName) return res.status(400).json({ error: "Author name is required" });
 
+      const userEmail = req.user!.email || "";
       const stripe = await getUncachableStripeClient();
       const pi = await (stripe.paymentIntents as any).create({
         amount: 4999,
         currency: "gbp",
         payment_method_types: ["card"],
-        receipt_email: customerEmail || undefined,
+        receipt_email: userEmail || undefined,
         description: `You & Me — Life Story Book for ${authorName}`,
         metadata: {
           userId: String(req.user!.id),
           authorName,
-          customerEmail: customerEmail || "",
+          customerEmail: userEmail,
           deliveryName: deliveryName || "",
           deliveryAddress: deliveryAddress || "",
           deliveryCity: deliveryCity || "",
@@ -146,6 +148,21 @@ export async function registerRoutes(
         content: initialQ,
         category: "tone_setting",
       });
+
+      // Send customer confirmation email (non-blocking)
+      if (book.customerEmail) {
+        sendOrderConfirmationEmail({
+          customerEmail: book.customerEmail,
+          customerName: req.user!.username,
+          bookId: book.id,
+          authorName: authorName.trim(),
+          deliveryName: book.deliveryName,
+          deliveryAddress: book.deliveryAddress,
+          deliveryCity: book.deliveryCity,
+          deliveryPostcode: book.deliveryPostcode,
+          deliveryCountry: book.deliveryCountry,
+        }).catch((e) => console.error("[customer-email] Confirmation send failed:", e));
+      }
 
       res.status(201).json(book);
     } catch (err: any) {
@@ -552,6 +569,17 @@ export async function registerRoutes(
         approvedAt,
         emailSentAt: approvedAt,
       });
+
+      // Notify customer their book is going to print (non-blocking)
+      if (book.customerEmail) {
+        const customerName = req.isAuthenticated() ? req.user!.username : book.deliveryName || book.authorName;
+        sendInProductionEmail({
+          customerEmail: book.customerEmail,
+          customerName,
+          bookId,
+          authorName: book.authorName,
+        }).catch((e) => console.error("[customer-email] In-production send failed:", e));
+      }
 
       res.json(updatedBook);
     } catch (error) {

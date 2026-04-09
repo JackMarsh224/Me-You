@@ -4,13 +4,14 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import logoImage from "@assets/logo_transparent.png";
 
 export default function Register() {
   const [, navigate] = useLocation();
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const params = new URLSearchParams(window.location.search);
@@ -20,7 +21,7 @@ export default function Register() {
 
   const registerMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/register", { username, password });
+      const res = await apiRequest("POST", "/api/register", { username, email, password });
       return await res.json();
     },
     onSuccess: () => {
@@ -57,6 +58,9 @@ export default function Register() {
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
             <CardTitle className="font-serif text-2xl">Create Account</CardTitle>
+            <CardDescription>
+              We'll use your email to send order updates and delivery notifications.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -77,8 +81,18 @@ export default function Register() {
               </div>
               <div className="space-y-2">
                 <Input
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  data-testid="input-email"
+                />
+              </div>
+              <div className="space-y-2">
+                <Input
                   type="password"
-                  placeholder="Password"
+                  placeholder="Password (min. 6 characters)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -91,7 +105,7 @@ export default function Register() {
                 disabled={registerMutation.isPending}
                 data-testid="button-register"
               >
-                {registerMutation.isPending ? "Creating account..." : "Register"}
+                {registerMutation.isPending ? "Creating account..." : "Create Account"}
               </Button>
               <p className="text-sm text-center text-muted-foreground">
                 Already have an account?{" "}
